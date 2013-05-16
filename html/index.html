@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>PID Naif - Flamenco - tt</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+  		<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+  		<script>
+  			$(function() {
+    			$( "#ui-sliderRoll" ).slider({min:-1.0, max:1.0, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}});
+    			$( "#ui-sliderTilt" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtTilt").html(ui.value); return;}});
+    			$( "#ui-sliderYaw" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtYaw").html(ui.value); return;}});
+    			$( "#ui-sliderP" ).slider({min:0.0, max:500.0, step:0.5, value:80.0, slide: function(event, ui){$("#ui-txtP").html(ui.value); return;}, create: function(event, ui){$("#ui-txtP").html("80.0"); console.log("hello"); return;}});
+    			$( "#ui-sliderI" ).slider({min:0.0, max:3500.0, step:0.1, value:700.0, slide: function(event, ui){$("#ui-txtI").html(ui.value); return;}, create: function(event, ui){$("#ui-txtI").html("700.0"); return;}});
+          $( "#ui-sliderD" ).slider({min:0.0, max:50.0, step:0.1, value:0.0, slide: function(event, ui){$("#ui-txtD").html(ui.value); return;}, create: function(event, ui){$("#ui-txtD").html("0.0"); return;}});
+          $( "#ui-sliderWind" ).slider({min:-0.05, max:0.05, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtWind").html(ui.value); return;}, create: function(event, ui){$("#ui-txtWind").html("0.0"); return;}});
+          $( "#ui-sliderNoise" ).slider({min:-0.01, max:0.01, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.0"); return;}});
+          $( "#ui-sliderSpeed" ).slider({min:-1.0, max:1.0, step:0.05, value:0.0, slide: function(event, ui){$("#ui-txtSpeed").html(ui.value); return;}, create: function(event, ui){$("#ui-txtSpeed").html("0.0"); return;}});
+  			
+        //  $("#tabs").tabs();
+        });
+  		</script>
+ 
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+      #info {
+        color: #fff;
+        position: relative;
+        top: 10px;
+        width: 100%;
+        text-align: left;
+        z-index: 100;
+        display:block;
+        font-size:80%;
+
+      }
+
+      h4 {
+        color: #fff;
+        font-size:80%;
+        display:block;
+        padding-top:0px;
+        padding-bottom:0px;
+        margin-top: 0px;
+        margin-bottom:0px;
+        position:absolute;
+      }
+
+      #ui {
+        color: #fff;
+        width: 200px;
+        height:800px;
+        position:absolute;
+        z-index:10;
+        padding-top: 40px;
+        opacity:0.95;
+      }     
+
+      #chart {
+        color: #fff;
+        height:380px;
+        width: 250px;
+        position:absolute;
+        text-align:left;
+        right:10px;
+        z-index:10;
+        padding-top: 20px;
+        opacity:0.8;
+      }
+      
+      .chart {
+        height:90px;
+        width:450px;        
+      }
+
+			#webgl {
+				color: #fff;
+				height: 400px;
+				width: 800px;
+				position:relative;
+			}
+
+			.slider {
+				height:15px;
+				width:100px;
+			}
+
+			.text {
+				height:15px;
+				width:30px;
+			}
+			.ui-state-default {
+				height:15px;
+				width:50px;
+			}
+
+			.ui-slider .ui-slider-handle {
+			    cursor: default;
+			    height: 1.2em;
+			    position: absolute;
+			    width: 0.6em;
+			    z-index: 2;
+			}
+
+			a { color: skyblue }
+		</style>
+	</head>
+	<body onload="createTimeline()">
+		<div id="info">
+      
+      Description:</br>
+      - Implémentation (très) naîve d'un controlleur PID pour mieux en comprendre les concepts..</br>
+    </br>
+
+      Pré-requis:</br>
+      - Affichage webgl, nécessite un navigateur web récent (idéalement Chrome pour de bonnes performances) sur PC, Mac ou Linux.</br>
+      - Ne marche pas sur tablettes iOS, marche peut-être sur tablettes Android..</br>
+      - Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="http://jqueryui.com">jQuery UI</a></br>
+      </br>
+      Fonctions:</br>
+      - Rotation de la camera autour du multi: clic gauche + mouvement souris</br>
+      - Slider "Roll" permet de choisir une inclinaison cible pour le controlleur PID </br>
+      - Slider P permet d'ajuster le facteur "Proportionnel" du controlleur PID</br>
+      - Slider I permet d'ajuster le facteur "Intégral" du controlleur PID</br>
+      - Slider D permet d'ajuster le facteur "Dérivé" du controlleur PID</br>
+      - Slider Wind permet d'ajuster la force du vent latéral </br>
+      - Slider Noise permet d'ajuster l'amplitude d'une perturbation aléatoire</br>
+      </br>
+      Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
+      </br>
+		</div>
+		<div id="webgl">
+      <div id="tabs">
+  			<div id="ui">
+  				<TABLE BORDER="0"> 
+  				  <CAPTION></CAPTION> 
+            <TR> 
+              <TH>  
+              <div class="ui-state-default ui-corner-all ui-helper-clearfix" title="Adjust wanted roll">Roll</div>
+             </TH> 
+             <TH>           
+              <div id="ui-sliderRoll" class="slider"></div>
+             </TH> 
+             <TH>           
+              <div id="ui-txtRoll" class="text"></div>
+             </TH> 
+            </TR> 
+
+            <TR>
+            </TR>
+
+  				  <TR> 
+  					  <TH> 	
+  					 	<div class="ui-state-default ui-corner-all ui-helper-clearfix">P</div>
+  					 </TH> 
+  					 <TH> 					
+  					 	<div id="ui-sliderP" class="slider"></div>
+  					 </TH> 
+  					 <TH> 					
+  					 	<div id="ui-txtP" class="text"></div>
+  					 </TH> 
+  				  </TR> 
+
+  				  <TR> 
+  					  <TH> 	
+  					 	<div class="ui-state-default ui-corner-all ui-helper-clearfix">I</div>
+  					 </TH> 
+  					 <TH> 					
+  					 	<div id="ui-sliderI" class="slider"></div>
+  					 </TH> 
+  					 <TH> 					
+  					 	<div id="ui-txtI" class="text"></div>
+  					 </TH> 
+  				  </TR> 
+
+  				  <TR> 
+  					  <TH> 	
+  					 	<div class="ui-state-default ui-corner-all ui-helper-clearfix">D</div>
+  					 </TH> 
+  					 <TH> 					
+  					 	<div id="ui-sliderD" class="slider"></div>
+  					 </TH> 
+  					 <TH> 					
+  					 	<div id="ui-txtD" class="text"></div>
+  					 </TH> 
+  				  </TR> 
+
+            <TR>
+            </TR>
+
+            <TR> 
+              <TH>  
+              <div class="ui-state-default ui-corner-all ui-helper-clearfix">Wind</div>
+             </TH> 
+             <TH>           
+              <div id="ui-sliderWind" class="slider"></div>
+             </TH> 
+             <TH>           
+              <div id="ui-txtWind" class="text"></div>
+             </TH> 
+            </TR> 
+
+           <TR> 
+              <TH>  
+              <div class="ui-state-default ui-corner-all ui-helper-clearfix">Noise</div>
+             </TH> 
+             <TH>           
+              <div id="ui-sliderNoise" class="slider"></div>
+             </TH> 
+             <TH>           
+              <div id="ui-txtNoise" class="text"></div>
+             </TH> 
+            </TR> 
+
+            <TR>
+            </TR>
+
+           <TR> 
+              <TH>  
+              <div class="ui-state-default ui-corner-all ui-helper-clearfix">Speed</div>
+             </TH> 
+             <TH>           
+              <div id="ui-sliderSpeed" class="slider"></div>
+             </TH> 
+             <TH>           
+              <div id="ui-txtSpeed" class="text"></div>
+             </TH> 
+            </TR> 
+
+  				</TABLE>
+			</div>
+    </div>
+    <div id="chart">
+      <h4 id="output-text">OUTPUT COMMAND</h4>
+      <canvas id="chartOutput" class="chart" width="800px" height="100px"></canvas>
+      <h4 id="error-text"></h4>
+      <canvas id="chartError" class="chart" width="800px" height="100px">test</canvas>
+      <h4 id="integral-text"></h4>
+      <canvas id="chartIntegral" class="chart" width="800px" height="100px"></canvas>
+      <h4 id="derivative-text"></h4>
+      <canvas id="chartDerivative" class="chart" width="800px" height="100px"></canvas>
+    </div>
+		</div>
+
+		<script src="build/three.min.js"></script>
+		<script src="js/controls/OrbitControls.js"></script>
+		<script src="js/loaders/ColladaLoader.js"></script>
+
+		<script src="js/shaders/BleachBypassShader.js"></script>
+		<script src="js/shaders/ColorifyShader.js"></script>
+		<script src="js/shaders/ConvolutionShader.js"></script>
+		<script src="js/shaders/CopyShader.js"></script>
+		<script src="js/shaders/DotScreenShader.js"></script>
+		<script src="js/shaders/FilmShader.js"></script>
+		<script src="js/shaders/HorizontalBlurShader.js"></script>
+		<script src="js/shaders/SepiaShader.js"></script>
+		<script src="js/shaders/VerticalBlurShader.js"></script>
+		<script src="js/shaders/VignetteShader.js"></script>
+		<script src="js/shaders/FXAAShader.js"></script>
+		<script src="js/shaders/BlendShaderCustom.js"></script>
+		<script src="js/shaders/BrightnessContrastShader.js"></script>
+		<script src="js/shaders/HueSaturationShader.js"></script>
+
+
+		<script src="js/postprocessing/EffectComposer.js"></script>
+		<script src="js/postprocessing/RenderPass.js"></script>
+		<script src="js/postprocessing/BloomPass.js"></script>
+		<script src="js/postprocessing/FilmPass.js"></script>
+		<script src="js/postprocessing/DotScreenPass.js"></script>
+		<script src="js/postprocessing/TexturePass.js"></script>
+		<script src="js/postprocessing/ShaderPass.js"></script>
+		<script src="js/postprocessing/MaskPass.js"></script>
+
+		<script src="js/Detector.js"></script>
+
+		<script src="js/libs/stats.min.js"></script>
+
+		<script src="js/PIDController.js"></script>
+		<script src="js/myViewer.js"></script>
+		<script>
+			launchWebGL($("#webgl").width(),$("#webgl").height());
+		</script>
+     <script type="text/javascript" src="js/smoothie.js"></script>
+     <script type="text/javascript">
+      // Randomly add a data point every 500ms
+      var output = new TimeSeries();
+      var error = new TimeSeries();
+      var integral = new TimeSeries();
+      var derivative = new TimeSeries();
+      setInterval(function() {
+        output.append(new Date().getTime(), myPID.outputCommand);
+        error.append(new Date().getTime(), myPID.error);
+        integral.append(new Date().getTime(), myPID.integral);
+        derivative.append(new Date().getTime(), myPID.derivative);
+        $("#output-text").html("OUTPUT COMMAND: " + myPID.outputCommand.toFixed(2) + "</br>= P*<font color='red'>ERROR</font> + I*<font color='#00FF00'>INTEGRAL</font> + D*<font color='blue'>DERIVATIVE</font>");
+        $("#error-text").html("<font color='red'>ERROR</font>: " + myPID.error.toFixed(2) + "</br>= targetValue - currentValue" );
+        $("#integral-text").html("<font color='#00FF00'>INTEGRAL</font>: " + myPID.integral.toFixed(2) + "</br>= previousIntegral + error*dt" );
+        $("#derivative-text").html("<font color='blue'>DERIVATIVE</font>: " + myPID.derivative.toFixed(2) + "</br>= (error - previousError) / dt");
+      }, 100);
+      
+      function createTimeline() {
+        var chartOutput = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12}});
+        chartOutput.addTimeSeries(output, { strokeStyle: 'rgba(220, 220, 220, 4)', lineWidth: 2 });
+        var chartError = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12},maxValue:1,minValue:-1});
+        chartError.addTimeSeries(error, { strokeStyle: 'rgba(220, 0, 0, 1)', lineWidth: 2 });
+        var chartIntegral = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12},maxValue:0.2,minValue:-0.2});
+        chartIntegral.addTimeSeries(integral, { strokeStyle: 'rgba(0, 220, 0, 1)', lineWidth: 2 });
+        var chartDerivative = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12},maxValue:20,minValue:-20});
+        chartDerivative.addTimeSeries(derivative, { strokeStyle: 'rgba(0, 0, 220, 1)', lineWidth: 2 });
+        chartOutput.streamTo(document.getElementById("chartOutput"), 100);
+        chartError.streamTo(document.getElementById("chartError"), 100);
+        chartIntegral.streamTo(document.getElementById("chartIntegral"), 100);
+        chartDerivative.streamTo(document.getElementById("chartDerivative"), 100);
+      }
+      </script>
+
+
+	</body>
+</html>
