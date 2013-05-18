@@ -421,7 +421,7 @@ function init() {
 	);
 
 	controls = new THREE.OrbitControls( camera );
-	controls.addEventListener( 'change', renderer );
+	//controls.addEventListener( 'change', renderer );
 
 	var shaderBleach = THREE.BleachBypassShader;
 	var effectBleach = new THREE.ShaderPass( shaderBleach );
@@ -565,8 +565,19 @@ function animate() {
 	requestAnimationFrame( animate );
 	if ( t > 1 ) t = 0;
 
+	controls.update();
+
 	render();
 //	stats.update();
+}
+
+function get_direction(node)
+{
+	var pLocal = new THREE.Vector3( 0, -1, 0 );
+	var pWorld = pLocal.applyMatrix3( node.matrixWorld );
+	var dir = pWorld.sub(node.position).normalize();
+
+	return dir;
 }
 
 function render() {
@@ -577,8 +588,10 @@ function render() {
 	{
 		if (child.name == "ROOT") 
 		{
+			var root  = child;
+
 			// Orientation
-			var q = child.quaternion;
+			var q = root.quaternion;
 			var v = new THREE.Vector3();
 			v.setEulerFromQuaternion(q);
 			var targetVal = $( "#ui-sliderRoll" ).slider("option", "value");
@@ -588,25 +601,35 @@ function render() {
 			v.z = v.z + (myPID.outputCommand * 0.0007) + wind + noise;
 			myPID.currentValue = v.z;
 			q = (new THREE.Quaternion).setFromEuler(v);
-			child.quaternion = q;
+			root.quaternion = q;
 
 			// Position
-//			weightForce.set(0.0, -1.0 * weight * g * 0.00001, 0.0);
+			var currentPosition = root.position;
+			var newPosition;
+
 			var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
+			var allForces = new THREE.Vector3( 0, 0, 0 );
 
-			var upPointLocal = new THREE.Vector3();
-			upPointLocal.set(0.0, 1.0, 0.0);
-			var upPointWorld = child.matrixWorld.multiplyVector3( upPointLocal );
-			var upVectorWorld = upPointWorld.subSelf(child.position).normalize();
-			upVectorWorld.multiplyScalar(speed*2.0);
+			// Weight
+			var weightForceDiff = weightForce.clone();
+			weightForceDiff.multiplyScalar( 0.0001 );
 
-			var currentPosition = child.position;
-			var newPositionWeight = new THREE.Vector3(0,0,0);
-			var newPositionWeightMotor = new THREE.Vector3(0,0,0);
-			newPositionWeight.add(child.position, weightForce); // + speed*child.up;
-			newPositionWeightMotor.add(newPositionWeight, motorForce);
-			motorForce.set(upVectorWorld.x, upVectorWorld.y, upVectorWorld.z); 
-		//	child.position = newPositionWeightMotor;
+			allForces.add( weightForceDiff );
+			
+			// MotorForce
+			var root_dir = get_direction(root);
+			motorForce = root_dir.clone();
+//			var motorForceDiff = motorForce.clone();
+//			motorForceDiff.multiplyScalar( 1.0 );
+
+			allForces.add( motorForce.multiplyScalar( speed ));
+
+			newPosition = currentPosition.clone();
+			newPosition.add(allForces);
+
+			if( newPosition.y < 0.0)
+				newPosition.y = 0.0;
+			root.position = newPosition;
 
 			update_line(weightForceRep, new THREE.Vector3( currentPosition.x, currentPosition.y, currentPosition.z ), weightForce);
 			update_line(motorForceRep, new THREE.Vector3( currentPosition.x, currentPosition.y, currentPosition.z ), motorForce);
@@ -614,7 +637,6 @@ function render() {
 		}
 	});
 
-	controls.update();
 	//renderer.render(scene, camera);
 	renderer.clear();
 	processorChain.render(delta);
