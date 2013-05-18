@@ -8,7 +8,7 @@ THREE.SceneExporter.prototype = {
 
 	constructor: THREE.SceneExporter,
 
-	parse: function ( scene, clearColor, clearAlpha ) {
+	parse: function ( scene ) {
 
 		var position = Vector3String( scene.position );
 		var rotation = Vector3String( scene.rotation );
@@ -143,7 +143,7 @@ THREE.SceneExporter.prototype = {
 
 		scene.traverse( function ( node ) {
 
-			if ( node instanceof THREE.Camera && node.properties.active ) {
+			if ( node instanceof THREE.Camera && node.userData.active ) {
 
 				activeCamera = node;
 
@@ -151,8 +151,6 @@ THREE.SceneExporter.prototype = {
 
 		} );
 
-		var bgcolor = ColorString( clearColor );
-		var bgalpha = clearAlpha;
 		var defcamera = LabelString( activeCamera ? getObjectName( activeCamera ) : "" );
 		var deffog = LabelString( scene.fog ? getFogName( scene.fog ) : "" );
 
@@ -743,15 +741,13 @@ THREE.SceneExporter.prototype = {
 			'',
 			'	"defaults" :',
 			'	{',
-			'		"bgcolor" : ' + bgcolor + ',',
-			'		"bgalpha" : ' + bgalpha + ',',
 			'		"camera"  : ' + defcamera + ',',
 			'		"fog"  	  : ' + deffog,
 			'	}',
 			'}'
 		].join( '\n' );
 
-		return output;
+		return JSON.parse( output );
 
 	}
 

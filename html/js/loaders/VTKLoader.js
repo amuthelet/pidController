@@ -2,15 +2,16 @@
  * @author mrdoob / http://mrdoob.com/
  */
 
-THREE.VTKLoader = function () {
-
-	THREE.EventTarget.call( this );
-
-};
+THREE.VTKLoader = function () {};
 
 THREE.VTKLoader.prototype = {
 
 	constructor: THREE.VTKLoader,
+
+	addEventListener: THREE.EventDispatcher.prototype.addEventListener,
+	hasEventListener: THREE.EventDispatcher.prototype.hasEventListener,
+	removeEventListener: THREE.EventDispatcher.prototype.removeEventListener,
+	dispatchEvent: THREE.EventDispatcher.prototype.dispatchEvent,
 
 	load: function ( url, callback ) {
 
@@ -19,7 +20,11 @@ THREE.VTKLoader.prototype = {
 
 		request.addEventListener( 'load', function ( event ) {
 
-			scope.dispatchEvent( { type: 'load', content: scope.parse( event.target.responseText ) } );
+			var geometry = scope.parse( event.target.responseText );
+
+			scope.dispatchEvent( { type: 'load', content: geometry } );
+
+			if ( callback ) callback( geometry );
 
 		}, false );
 
@@ -34,16 +39,6 @@ THREE.VTKLoader.prototype = {
 			scope.dispatchEvent( { type: 'error', message: 'Couldn\'t load URL [' + url + ']' } );
 
 		}, false );
-
-		if ( callback ) {
-
-			scope.addEventListener( 'load', function ( event ) {
-
-				callback( event.content );
-
-			} );
-
-		}
 
 		request.open( 'GET', url, true );
 		request.send( null );
@@ -119,4 +114,4 @@ THREE.VTKLoader.prototype = {
 
 	}
 
-}
+};

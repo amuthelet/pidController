@@ -6,13 +6,19 @@
 
 THREE.MTLLoader = function( baseUrl, options ) {
 
-	THREE.EventTarget.call( this );
 	this.baseUrl = baseUrl;
 	this.options = options;
 
 };
 
 THREE.MTLLoader.prototype = {
+
+	constructor: THREE.MTLLoader,
+
+	addEventListener: THREE.EventDispatcher.prototype.addEventListener,
+	hasEventListener: THREE.EventDispatcher.prototype.hasEventListener,
+	removeEventListener: THREE.EventDispatcher.prototype.removeEventListener,
+	dispatchEvent: THREE.EventDispatcher.prototype.dispatchEvent,
 
 	/**
 	 * Loads a MTL file
@@ -149,8 +155,6 @@ THREE.MTLLoader.prototype = {
 
 THREE.MTLLoader.MaterialCreator = function( baseUrl, options ) {
 
-	THREE.EventTarget.call( this );
-
 	this.baseUrl = baseUrl;
 	this.options = options;
 	this.materialsInfo = {};
@@ -164,6 +168,8 @@ THREE.MTLLoader.MaterialCreator = function( baseUrl, options ) {
 };
 
 THREE.MTLLoader.MaterialCreator.prototype = {
+
+	constructor: THREE.MTLLoader.MaterialCreator,
 
 	setMaterials: function( materialsInfo ) {
 
@@ -400,7 +406,7 @@ THREE.MTLLoader.MaterialCreator.prototype = {
 
 THREE.MTLLoader.loadTexture = function ( url, mapping, onLoad, onError ) {
 
-	var isCompressed = url.toLowerCase().endsWith( ".dds" );
+	var isCompressed = /\.dds$/i.test( url );
 
 	if ( isCompressed ) {
 
