@@ -566,7 +566,7 @@ function render() {
 			var newPosition = new THREE.Vector3();
 			newPosition.add(child.position, weight); // + speed*child.up;
 			newPosition.add(newPosition, child_up.multiplyScalar(speed));
-		//	child.position = newPosition;
+			child.position = newPosition;
 		}
 	});
 
