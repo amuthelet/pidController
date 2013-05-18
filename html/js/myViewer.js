@@ -33,6 +33,16 @@ var loader = new THREE.ColladaLoader();
 
 var myPID;
 
+var weightForce;
+var motorForce;
+
+var g = 9.81; 
+var weight = 2.0;
+var weightForce = new THREE.Vector3(0,-weight*g,0);
+var weightForceRep = new THREE.Vector3(0,0,0);
+var motorForce = new THREE.Vector3(0,1.0,0);
+var motorForceRep = new THREE.Vector3(0,0,0);
+
 function launchWebGL(width, height)
 {
 	log("Loading models ..."+width+" "+height);
@@ -330,6 +340,28 @@ function createSkyBox(scene, path, format, position)
 
 }
 
+function create_line( startVertex, endVertex )
+{
+	var geom = new THREE.Geometry();
+	geom.dynamic = true;
+	geom.vertices = [
+	    startVertex,
+	    endVertex
+	];
+	var color
+	var line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color : 0xffffffff, linewidth:2} ));
+	scene.add(line);
+
+	return geom;
+}
+
+function update_line(line, startVertex, endVertex)
+{
+	line.vertices[0] = startVertex;
+	line.vertices[1] = endVertex;
+	line.verticesNeedUpdate = true;
+}
+
 function init_pid()
 {
 	myPID = new PIDController(0.2, 0.01, 1.0);
@@ -355,6 +387,11 @@ function init() {
 
 	createLights(scene);
 	processModel(scene);
+
+
+	weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ) );
+	motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ) );
+
 
 	//createSkyBox(scene, "textures/cube/SwedishRoyalCastle/", ".jpg", new THREE.Vector3(100.0,150.0,100.0));
 	
@@ -554,19 +591,26 @@ function render() {
 			child.quaternion = q;
 
 			// Position
-			var weight = new THREE.Vector3();
-			weight.set(0.0, -1.0 * 2.5 * 9.81*0.00001, 0.0);
+//			weightForce.set(0.0, -1.0 * weight * g * 0.00001, 0.0);
 			var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
 
-			var child_up_point_local = new THREE.Vector3();
-			child_up_point_local.set(0.0, 1.0, 0.0);
-			var child_up_point_world = child.matrixWorld.multiplyVector3(child_up_point_local);
-			var child_up = child_up_point_world.subSelf(child.position).normalize();
+			var upPointLocal = new THREE.Vector3();
+			upPointLocal.set(0.0, 1.0, 0.0);
+			var upPointWorld = child.matrixWorld.multiplyVector3( upPointLocal );
+			var upVectorWorld = upPointWorld.subSelf(child.position).normalize();
+			upVectorWorld.multiplyScalar(speed*2.0);
 
-			var newPosition = new THREE.Vector3();
-			newPosition.add(child.position, weight); // + speed*child.up;
-			newPosition.add(newPosition, child_up.multiplyScalar(speed));
-			child.position = newPosition;
+			var currentPosition = child.position;
+			var newPositionWeight = new THREE.Vector3(0,0,0);
+			var newPositionWeightMotor = new THREE.Vector3(0,0,0);
+			newPositionWeight.add(child.position, weightForce); // + speed*child.up;
+			newPositionWeightMotor.add(newPositionWeight, motorForce);
+			motorForce.set(upVectorWorld.x, upVectorWorld.y, upVectorWorld.z); 
+		//	child.position = newPositionWeightMotor;
+
+			update_line(weightForceRep, new THREE.Vector3( currentPosition.x, currentPosition.y, currentPosition.z ), weightForce);
+			update_line(motorForceRep, new THREE.Vector3( currentPosition.x, currentPosition.y, currentPosition.z ), motorForce);
+
 		}
 	});
 
