@@ -264,7 +264,9 @@ function createPlane(scene, position, rotation, scale)
 	color		: 0xffffff,
 	shininess	: 10, 
 	specular	: 0xffffff,
-	shading		: THREE.SmoothShading
+	shading		: THREE.SmoothShading,
+	transparent     : true,
+	opacity          : 0.6,
 	});		
 
 	var geometry = new THREE.PlaneGeometry(1, 1);
@@ -332,7 +334,7 @@ function createSkyBox(scene, path, format, position)
 
 	var textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
 
-	var shader = THREE.ShaderUtils.lib[ "cube" ];
+	var shader = THREE.ShaderLib[ "cube" ];
 	shader.uniforms[ "tCube" ].value = textureCube;
 
 	var material = new THREE.ShaderMaterial( {
@@ -409,14 +411,15 @@ function init() {
 	//motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), 0xffffff );
 
 
-	//createSkyBox(scene, "textures/cube/SwedishRoyalCastle/", ".jpg", new THREE.Vector3(100.0,150.0,100.0));
+	createSkyBox(scene, "textures/cube/Park2/", ".jpg", new THREE.Vector3(100.0,150.0,100.0));
 	
 	projector = new THREE.Projector();
 
 	renderer = new THREE.WebGLRenderer({
 		antialias		: false,	// to get smoother output
 		preserveDrawingBuffer	: false,	// to allow screenshot
-		alpha : true
+		alpha : true,
+		transparency: true,
 	});
 //	renderer = new THREE.CanvasRenderer();
 	renderer.setSize( width, height );
@@ -636,7 +639,31 @@ function render() {
 			controlerTilt.currentValue = v.x;
 			controlerYaw.currentValue = v.y;
 			q = (new THREE.Quaternion).setFromEuler(v);
-			root.quaternion = q;
+			//root.quaternion = q;
+			
+			var angles = new THREE.Vector3( 0, 0, 0 );
+			angles.setEulerFromQuaternion( root.quaternion, 'YXZ' );
+
+			var root_axisX = new THREE.Vector3( 1, 0, 0 );
+			root.localToWorld( root_axisX );
+			root_axisX.sub(root.position.clone().multiplyScalar( 10.0 ));
+			root_axisX.normalize();
+//			root_axisX.applyEuler(angles, root.eulerOrder);
+			root.rotateOnAxis(root_axisX, (controlerTilt.outputCommand * 0.0007) + noise + radioTilt);
+
+			var root_axisY = new THREE.Vector3( 0, 1, 0 );
+			root.localToWorld( root_axisY );
+			root_axisY.sub(root.position.clone().multiplyScalar( 10.0 ));
+			root_axisY.normalize();
+//			root_axisY.applyEuler(angles, root.eulerOrder);
+			root.rotateOnAxis(root_axisY,radioYaw);
+
+			var root_axisZ = new THREE.Vector3( 0, 0, 1 );
+			root.localToWorld( root_axisZ );
+			root_axisZ.sub(root.position.clone().multiplyScalar( 10.0 ));
+			root_axisZ.normalize();
+//			root_axisZ.applyEuler(angles, root.eulerOrder);
+			root.rotateOnAxis(root_axisZ, (controlerRoll.outputCommand * 0.0007) + wind + noise + joystick.deltaX() / 1000.0);
 
 			// Position
 			var currentPosition = root.position.clone();
@@ -653,7 +680,9 @@ function render() {
 			// MotorForce
 			var root_dir = get_direction(root);
 			motorForce = root_dir.clone();
+
 			radioThrottle = -joystick.deltaY() * 0.0003;
+
 			if( radioThrottle < 0.0 )
 					radioThrottle = 0.0;
 
