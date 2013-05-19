@@ -18,32 +18,52 @@
     			$( "#ui-sliderI" ).slider({min:0.0, max:3500.0, step:0.1, value:700.0, slide: function(event, ui){$("#ui-txtI").html(ui.value); return;}, create: function(event, ui){$("#ui-txtI").html("700.0"); return;}});
           $( "#ui-sliderD" ).slider({min:0.0, max:50.0, step:0.1, value:0.0, slide: function(event, ui){$("#ui-txtD").html(ui.value); return;}, create: function(event, ui){$("#ui-txtD").html("0.0"); return;}});
           $( "#ui-sliderWind" ).slider({min:-0.05, max:0.05, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtWind").html(ui.value); return;}, create: function(event, ui){$("#ui-txtWind").html("0.0"); return;}});
-          $( "#ui-sliderNoise" ).slider({min:-0.01, max:0.01, step:0.001, value:0.007, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.007"); return;}});
+          $( "#ui-sliderNoise" ).slider({min:-0.01, max:0.01, step:0.001, value:0.005, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.005"); return;}});
           $( "#ui-sliderSpeed" ).slider({min:-1.0, max:1.0, step:0.05, value:0.0, slide: function(event, ui){$("#ui-txtSpeed").html(ui.value); return;}, create: function(event, ui){$("#ui-txtSpeed").html("0.0"); return;}});
 
           $(document).keypress(function(event) {
-            console.log("key pressed" + event.which);
             if (event.which == 113) {
                event.preventDefault();
-               console.log("q pressed..");
-               radioRoll(1);
+               increaseYaw(); 
              }
             if (event.which == 100) {
                event.preventDefault();
-               console.log("d pressed..");
-               radioRoll(-1);
+               decreaseYaw();
              }
             if (event.which == 122) {
                event.preventDefault();
-               console.log("z pressed..");
-               radioTilt(1);
+               increaseTilt();
              }
             if (event.which == 115) {
                event.preventDefault();
-               console.log("s pressed..");
-               radioTilt(-1);
+               decreaseTilt();
              }
-          });  			
+
+          }); 
+          $(document).keyup(function(event) {
+            console.log(event.which);
+            if (event.which == 81) {
+                isIncreasingYaw = false;
+             }
+            if (event.which == 68) {
+                isDecreasingYaw = false;
+             }
+            if (event.which == 90) {
+              isIncreasingTilt = false;
+            }
+            if (event.which == 83) {
+              isDecreasingTilt = false;
+             }
+          }); 
+
+      setInterval(function() {
+        if( (isIncreasingTilt === false) && (isDecreasingTilt === false) )
+            radioTilt = 0.0;
+        if( (isIncreasingYaw === false) && (isDecreasingYaw === false) )
+            radioYaw = 0.0;
+      }, 100);
+
+
         });
   		</script>
  

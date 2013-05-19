@@ -2,7 +2,7 @@ if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 var container, stats;
 
-var camera, cameraOrtho, scene, sceneBG, sceneRTT, renderer, objects;
+var camera, cameraLookAt, cameraOrbit, cameraOrtho, scene, sceneBG, sceneRTT, renderer, objects;
 var composerScene, composer1, composer2, composer3, composer4, processorChain;
 var effectFXAA;
 var win = window;
@@ -43,7 +43,15 @@ var weightForceRep = new THREE.Vector3(0,0,0);
 var motorForce = new THREE.Vector3(0,1.0,0);
 var motorForceRep = new THREE.Vector3(0,0,0);
 
-var radioRoll=0.0, radioTilt=0.0, radioYaw=0.0;
+var radioRoll=0.0, radioTilt=0.0, radioYaw=0.0; radioThrottle=0.0;
+var radioYawTouched = false;
+var radioTiltTouched = false;
+var isIncreasingTilt = false;
+var isDecreasingTilt = false;
+var isIncreasingYaw = false;
+var isDecreasingYaw = false;
+
+var pointLight01, pointLight02, pointLight03;
 
 var joystick;
 
@@ -131,12 +139,12 @@ function createLights(scene)
 	// Lights
 	// orange
 	var color1 = new THREE.Color(0xca5825);
-	var pointLight01 = new THREE.SpotLight(color1.getHex(), 0.8);
+	pointLight01 = new THREE.SpotLight(color1.getHex(), 0.8);
 	var pos1 = new THREE.Vector3(-5.0, 5.0, -2.0);
 	pointLight01.position.set(pos1.x, pos1.y, pos1.z);
 	pointLight01.target.position.set(0,0,0);
 	pointLight01.shadowCameraNear = 1.0;
-	pointLight01.shadowCameraFar = 50.0;
+	pointLight01.shadowCameraFar = 500.0;
 	pointLight01.castShadow = true;
 	pointLight01.shadowDarkness = 0.2;
 	pointLight01.shadowCameraVisible = false;
@@ -150,12 +158,12 @@ function createLights(scene)
 
 	// blue
 	var color2 = new THREE.Color(0x9cb3c8);
-	var pointLight02 = new THREE.SpotLight(color2.getHex(), 1.0);
+	pointLight02 = new THREE.SpotLight(color2.getHex(), 1.0);
 	var pos2 = new THREE.Vector3(5.0,1.0,-2.0);
 	pointLight02.position.set(pos2.x, pos2.y, pos2.z);
 	pointLight02.target.position.set(0,0,0);
 	pointLight02.shadowCameraNear = 1.0;
-	pointLight02.shadowCameraFar = 50.0;
+	pointLight02.shadowCameraFar = 500.0;
 	pointLight02.castShadow = false;
 	pointLight02.shadowDarkness = 0.3;
 	pointLight02.shadowCameraVisible = false;
@@ -170,12 +178,12 @@ function createLights(scene)
 
 	// white
 	var color3 = new THREE.Color(0xadabab);
-	var pointLight03 = new THREE.SpotLight(color3.getHex(), 0.7);
+	pointLight03 = new THREE.SpotLight(color3.getHex(), 0.7);
 	var pos3 = new THREE.Vector3(0.0,2.0,5.0);
 	pointLight03.position.set(pos3.x, pos3.y, pos3.z);
 	pointLight03.target.position.set(0,0,0);
 	pointLight03.shadowCameraNear = 1.0;
-	pointLight03.shadowCameraFar = 50.0;
+	pointLight03.shadowCameraFar = 500.0;
 	pointLight03.castShadow = true;
 	pointLight03.shadowDarkness = 0.2;
 	pointLight03.shadowCameraVisible = false;
@@ -193,7 +201,6 @@ function createLights(scene)
 //	createFlare(scene, pointLight03.position, pointLight03.color);
 
 	scene.add( new THREE.AmbientLight( 0x727272 ) );
-
 }
 
 function log(msg) {
@@ -385,8 +392,11 @@ function init() {
 	scene = new THREE.Scene();
 	scene.add( dae );
 
-	camera = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
-	camera.position.set( 7, 2, 7 );
+	cameraLookAt = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
+	cameraLookAt.position.set( 7, 2, 7 );
+
+	cameraOrbit = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
+	cameraOrbit.position.set( 7, 2, 7 );
 
 	cameraOrtho = new THREE.OrthographicCamera( -halfWidth, halfWidth, halfHeight, -halfHeight, -10000, 10000 );
 	cameraOrtho.position.z = 100;
@@ -395,8 +405,8 @@ function init() {
 	processModel(scene);
 
 
-	weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ), 0x000000 );
-	motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), 0xffffff );
+	//weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ), 0x000000 );
+	//motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), 0xffffff );
 
 
 	//createSkyBox(scene, "textures/cube/SwedishRoyalCastle/", ".jpg", new THREE.Vector3(100.0,150.0,100.0));
@@ -426,7 +436,7 @@ function init() {
 		new THREE.Vector3(10000.0,10000.0,10000.0)
 	);
 
-	controls = new THREE.OrbitControls( camera );
+	controls = new THREE.OrbitControls( cameraOrbit );
 	//controls.addEventListener( 'change', renderer );
 
 	var shaderBleach = THREE.BleachBypassShader;
@@ -461,8 +471,8 @@ function init() {
 
 	var clearMask = new THREE.ClearMaskPass();
 
-	var renderMask = new THREE.MaskPass( scene, camera );
-	var renderMaskInverse = new THREE.MaskPass( scene, camera );
+	var renderMask = new THREE.MaskPass( scene, cameraLookAt );
+	var renderMaskInverse = new THREE.MaskPass( scene, cameraLookAt );
 	renderMaskInverse.inverse = true;
 
 	rtParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, stencilBuffer: true };
@@ -474,7 +484,7 @@ function init() {
 
 	sceneRTT = new THREE.Scene();
 	var renderBackground = new THREE.RenderPass( sceneBG, cameraOrtho );
-	var renderModel = new THREE.RenderPass( scene, camera );
+	var renderModel = new THREE.RenderPass( scene, cameraLookAt );
 
 	effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
 	effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
@@ -545,8 +555,8 @@ function init() {
 
 function onwinResize() {
 
-	camera.aspect = viewportWidth / viewportHeight;
-	camera.updateProjectionMatrix();
+	cameraLookAt.aspect = viewportWidth / viewportHeight;
+	cameraLookAt.updateProjectionMatrix();
 
 	cameraOrtho.left = -halfWidth;
 	cameraOrtho.right = halfWidth;
@@ -572,7 +582,6 @@ function animate() {
 	if ( t > 1 ) t = 0;
 
 	controls.update();
-
 	render();
 //	stats.update();
 }
@@ -609,20 +618,23 @@ function render() {
 		{
 			var root  = child;
 
+
 			// Orientation
 			var q = root.quaternion;
 			var v = new THREE.Vector3();
-			v.setEulerFromQuaternion(q);
+			v.setEulerFromQuaternion(q, 'XYZ');
 			var targetVal = $( "#ui-sliderRoll" ).slider("option", "value");
 			controlerRoll.Execute(v.z, targetVal, clock.getDelta());
 			controlerTilt.Execute(v.x, targetVal, clock.getDelta());
-			controlerYaw.Execute(v.y, targetVal, clock.getDelta());
+			controlerYaw.Execute(v.y, v.y, clock.getDelta());
 			var noise = Math.random() * $( "#ui-sliderNoise" ).slider("option", "value");
 			var wind = $( "#ui-sliderWind" ).slider("option", "value");
-			v.z = v.z + (controlerRoll.outputCommand * 0.0007) + wind + noise + joystick.deltaX() / 500.0;
-			v.x = v.x + (controlerTilt.outputCommand * 0.0007) + noise - joystick.deltaY() / 500.0;
-			v.y = v.y + (controlerYaw.outputCommand * 0.0007) + noise;
+			v.z = v.z + (controlerRoll.outputCommand * 0.0007) + wind + noise + joystick.deltaX() / 1000.0;
+			v.x = v.x + (controlerTilt.outputCommand * 0.0007) + noise + radioTilt;
+			v.y = v.y + radioYaw;
 			controlerRoll.currentValue = v.z;
+			controlerTilt.currentValue = v.x;
+			controlerYaw.currentValue = v.y;
 			q = (new THREE.Quaternion).setFromEuler(v);
 			root.quaternion = q;
 
@@ -635,13 +647,17 @@ function render() {
 
 			// Weight
 			var weightForceDiff = weightForce.clone();
-			weightForceDiff.multiplyScalar( 0.0001 );
+			weightForceDiff.multiplyScalar( 0.001 );
 			allForces.add( weightForceDiff );
 			
 			// MotorForce
 			var root_dir = get_direction(root);
 			motorForce = root_dir.clone();
-			allForces.add( motorForce.multiplyScalar( speed *0.01));
+			radioThrottle = -joystick.deltaY() * 0.0003;
+			if( radioThrottle < 0.0 )
+					radioThrottle = 0.0;
+
+			allForces.add( motorForce.multiplyScalar( radioThrottle));
 
 			// Update pos
 			newPosition = currentPosition.clone();
@@ -651,7 +667,18 @@ function render() {
 				newPosition.y = -0.04;
 			root.position = newPosition;
 
-			// Visual force debug
+			var newPositionScaled = newPosition.clone().multiplyScalar( 10.0 ); 
+
+			cameraLookAt.lookAt(newPositionScaled);
+			pointLight01.position = newPositionScaled.clone().add(new THREE.Vector3(-5,5,-2));
+			pointLight02.position = newPositionScaled.clone().add(new THREE.Vector3(5,1,-2));
+			pointLight03.position = newPositionScaled.clone().add(new THREE.Vector3(0,2,5));
+			pointLight01.target.position = newPositionScaled.clone();
+			pointLight02.target.position = newPositionScaled.clone();
+			pointLight03.target.position = newPositionScaled.clone();
+
+
+			// Visual rep of forces
 //			update_line(weightForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), weightForce);
 //			update_line(motorForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), motorForce);
 		}
@@ -676,9 +703,9 @@ function onDocumentMouseDown( event ) {
 	event.preventDefault();
 
 	var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
-	projector.unprojectVector( vector, camera );
+	projector.unprojectVector( vector, cameraLookAt );
 
-	var ray = new THREE.Ray( camera.position, vector.subSelf( camera.position ).normalize() );
+	var ray = new THREE.Ray( cameraLookAt.position, vector.subSelf( cameraLookAt.position ).normalize() );
 
 	var intersects = ray.intersectObjects( objects );
 
@@ -690,5 +717,33 @@ function onDocumentMouseDown( event ) {
 }
 
 function onDocumentMouseUp( event ) {
+}
+
+function increaseTilt() {
+
+	radioTilt += 0.01; 
+	radioTiltTouched = true;
+	isIncreasingTilt = true;
+}
+
+function decreaseTilt() {
+
+	radioTilt -= 0.01; 
+	radioTiltTouched = true;
+	isDecreasingTilt = true;
+}
+
+function increaseYaw() {
+
+	radioYaw = 0.015; 
+	radioYawTouched = true;
+	isIncreasingYaw = true;
+}
+
+function decreaseYaw() {
+
+	radioYaw = -0.015; 
+	radioYawTouched = true;
+	isDecreasingYaw = true;
 }
 
