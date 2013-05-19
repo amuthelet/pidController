@@ -18,10 +18,32 @@
     			$( "#ui-sliderI" ).slider({min:0.0, max:3500.0, step:0.1, value:700.0, slide: function(event, ui){$("#ui-txtI").html(ui.value); return;}, create: function(event, ui){$("#ui-txtI").html("700.0"); return;}});
           $( "#ui-sliderD" ).slider({min:0.0, max:50.0, step:0.1, value:0.0, slide: function(event, ui){$("#ui-txtD").html(ui.value); return;}, create: function(event, ui){$("#ui-txtD").html("0.0"); return;}});
           $( "#ui-sliderWind" ).slider({min:-0.05, max:0.05, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtWind").html(ui.value); return;}, create: function(event, ui){$("#ui-txtWind").html("0.0"); return;}});
-          $( "#ui-sliderNoise" ).slider({min:-0.01, max:0.01, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.0"); return;}});
+          $( "#ui-sliderNoise" ).slider({min:-0.01, max:0.01, step:0.001, value:0.007, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.007"); return;}});
           $( "#ui-sliderSpeed" ).slider({min:-1.0, max:1.0, step:0.05, value:0.0, slide: function(event, ui){$("#ui-txtSpeed").html(ui.value); return;}, create: function(event, ui){$("#ui-txtSpeed").html("0.0"); return;}});
-  			
-        //  $("#tabs").tabs();
+
+          $(document).keypress(function(event) {
+            console.log("key pressed" + event.which);
+            if (event.which == 113) {
+               event.preventDefault();
+               console.log("q pressed..");
+               radioRoll(1);
+             }
+            if (event.which == 100) {
+               event.preventDefault();
+               console.log("d pressed..");
+               radioRoll(-1);
+             }
+            if (event.which == 122) {
+               event.preventDefault();
+               console.log("z pressed..");
+               radioTilt(1);
+             }
+            if (event.which == 115) {
+               event.preventDefault();
+               console.log("s pressed..");
+               radioTilt(-1);
+             }
+          });  			
         });
   		</script>
  
@@ -112,34 +134,26 @@
 			    z-index: 2;
 			}
 
+      #virtual_joystick {
+        width   : 800px;
+        height    : 400px;
+        z-index:20px;
+        position : relative;
+      }
+
 			a { color: skyblue }
 		</style>
 	</head>
 	<body onload="createTimeline()">
-		<div id="info">
-      
-      Description:</br>
-      - Implémentation (très) naîve d'un controlleur PID pour mieux en comprendre les concepts..</br>
-    </br>
 
-      Pré-requis:</br>
-      - Affichage webgl, nécessite un navigateur web récent (idéalement Chrome pour de bonnes performances) sur PC, Mac ou Linux.</br>
-      - Ne marche pas sur tablettes iOS, marche peut-être sur tablettes Android..</br>
-      - Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="http://jqueryui.com">jQuery UI</a></br>
-      </br>
-      Fonctions:</br>
-      - Rotation de la camera autour du multi: clic gauche + mouvement souris</br>
-      - Slider "Roll" permet de choisir une inclinaison cible pour le controlleur PID </br>
-      - Slider P permet d'ajuster le facteur "Proportionnel" du controlleur PID</br>
-      - Slider I permet d'ajuster le facteur "Intégral" du controlleur PID</br>
-      - Slider D permet d'ajuster le facteur "Dérivé" du controlleur PID</br>
-      - Slider Wind permet d'ajuster la force du vent latéral </br>
-      - Slider Noise permet d'ajuster l'amplitude d'une perturbation aléatoire</br>
-      </br>
-      Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
-      </br>
-		</div>
+    <div id="vj_output">
+      VirtualJoystick output
+    </div>
+
 		<div id="webgl">
+    <div id="virtual_joystick">
+    </div>
+
       <div id="tabs">
   			<div id="ui">
   				<TABLE BORDER="0"> 
@@ -250,7 +264,32 @@
       <h4 id="derivative-text"></h4>
       <canvas id="chartDerivative" class="chart" width="800px" height="100px"></canvas>
     </div>
-		</div>
+    </div>
+    <div id="info">
+      Simulation Quadcopter - Flamenco - v0.2 (Exp)</br>
+      </br>
+      
+      Description:</br>
+      - Implémentation (très) naîve d'un controlleur PID pour mieux en comprendre les concepts..</br>
+    </br>
+
+      Pré-requis:</br>
+      - Affichage webgl, nécessite un navigateur web récent (idéalement Chrome pour de bonnes performances) sur PC, Mac ou Linux.</br>
+      - Ne marche pas sur tablettes iOS, marche peut-être sur tablettes Android..</br>
+      - Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js">VirtualJoystick.js</a></br>
+      </br>
+      Fonctions:</br>
+      - Rotation de la camera autour du multi: clic gauche + mouvement souris</br>
+      - Slider "Roll" permet de choisir une inclinaison cible pour le controlleur PID </br>
+      - Slider P permet d'ajuster le facteur "Proportionnel" du controlleur PID</br>
+      - Slider I permet d'ajuster le facteur "Intégral" du controlleur PID</br>
+      - Slider D permet d'ajuster le facteur "Dérivé" du controlleur PID</br>
+      - Slider Wind permet d'ajuster la force du vent latéral </br>
+      - Slider Noise permet d'ajuster l'amplitude d'une perturbation aléatoire</br>
+      </br>
+      Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
+      </br>
+    </div>
 
 		<script src="build/three.min.js"></script>
 		<script src="js/controls/OrbitControls.js"></script>
@@ -280,6 +319,7 @@
 		<script src="js/postprocessing/ShaderPass.js"></script>
 		<script src="js/postprocessing/MaskPass.js"></script>
 
+    <script src="js/VirtualJoystick.js"></script>
 		<script src="js/Detector.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
@@ -297,14 +337,14 @@
       var integral = new TimeSeries();
       var derivative = new TimeSeries();
       setInterval(function() {
-        output.append(new Date().getTime(), myPID.outputCommand);
-        error.append(new Date().getTime(), myPID.error);
-        integral.append(new Date().getTime(), myPID.integral);
-        derivative.append(new Date().getTime(), myPID.derivative);
-        $("#output-text").html("OUTPUT COMMAND: " + myPID.outputCommand.toFixed(2) + "</br>= P*<font color='red'>ERROR</font> + I*<font color='#00FF00'>INTEGRAL</font> + D*<font color='blue'>DERIVATIVE</font>");
-        $("#error-text").html("<font color='red'>ERROR</font>: " + myPID.error.toFixed(2) + "</br>= targetValue - currentValue" );
-        $("#integral-text").html("<font color='#00FF00'>INTEGRAL</font>: " + myPID.integral.toFixed(2) + "</br>= previousIntegral + error*dt" );
-        $("#derivative-text").html("<font color='blue'>DERIVATIVE</font>: " + myPID.derivative.toFixed(2) + "</br>= (error - previousError) / dt");
+        output.append(new Date().getTime(), controlerRoll.outputCommand);
+        error.append(new Date().getTime(), controlerRoll.error);
+        integral.append(new Date().getTime(), controlerRoll.integral);
+        derivative.append(new Date().getTime(), controlerRoll.derivative);
+        $("#output-text").html("OUTPUT COMMAND: " + controlerRoll.outputCommand.toFixed(2) + "</br>= P*<font color='red'>ERROR</font> + I*<font color='#00FF00'>INTEGRAL</font> + D*<font color='blue'>DERIVATIVE</font>");
+        $("#error-text").html("<font color='red'>ERROR</font>: " + controlerRoll.error.toFixed(2) + "</br>= targetValue - currentValue" );
+        $("#integral-text").html("<font color='#00FF00'>INTEGRAL</font>: " + controlerRoll.integral.toFixed(2) + "</br>= previousIntegral + error*dt" );
+        $("#derivative-text").html("<font color='blue'>DERIVATIVE</font>: " + controlerRoll.derivative.toFixed(2) + "</br>= (error - previousError) / dt");
       }, 100);
       
       function createTimeline() {
@@ -321,6 +361,14 @@
         chartIntegral.streamTo(document.getElementById("chartIntegral"), 100);
         chartDerivative.streamTo(document.getElementById("chartDerivative"), 100);
       }
+      </script>
+
+      <script>
+        console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
+        joystick  = new VirtualJoystick({
+          container : document.getElementById('virtual_joystick'),
+          mouseSupport  : true
+        });
       </script>
 
 

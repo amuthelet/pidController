@@ -31,7 +31,7 @@ var dae, skin;
 
 var loader = new THREE.ColladaLoader();
 
-var myPID;
+var controlerRoll, controlerTilt, controlerYaw;
 
 var weightForce;
 var motorForce;
@@ -42,6 +42,10 @@ var weightForce = new THREE.Vector3(0,-weight*g,0);
 var weightForceRep = new THREE.Vector3(0,0,0);
 var motorForce = new THREE.Vector3(0,1.0,0);
 var motorForceRep = new THREE.Vector3(0,0,0);
+
+var radioRoll=0.0, radioTilt=0.0, radioYaw=0.0;
+
+var joystick;
 
 function launchWebGL(width, height)
 {
@@ -340,7 +344,7 @@ function createSkyBox(scene, path, format, position)
 
 }
 
-function create_line( startVertex, endVertex )
+function create_line( startVertex, endVertex, iColor )
 {
 	var geom = new THREE.Geometry();
 	geom.dynamic = true;
@@ -349,7 +353,7 @@ function create_line( startVertex, endVertex )
 	    endVertex
 	];
 	var color
-	var line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color : 0xffffffff, linewidth:2} ));
+	var line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color : iColor, linewidth:3} ));
 	scene.add(line);
 
 	return geom;
@@ -357,14 +361,16 @@ function create_line( startVertex, endVertex )
 
 function update_line(line, startVertex, endVertex)
 {
-	line.vertices[0] = startVertex;
-	line.vertices[1] = endVertex;
+	line.vertices[0] = startVertex.clone();
+	line.vertices[1] = endVertex.clone();
 	line.verticesNeedUpdate = true;
 }
 
 function init_pid()
 {
-	myPID = new PIDController(0.2, 0.01, 1.0);
+	controlerRoll = new PIDController(0.2, 0.01, 1.0);
+	controlerTilt = new PIDController(0.2, 0.01, 1.0);
+	controlerYaw = new PIDController(0.2, 0.01, 1.0);
 	return;
 }
 
@@ -389,8 +395,8 @@ function init() {
 	processModel(scene);
 
 
-	weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ) );
-	motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ) );
+	weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ), 0x000000 );
+	motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), 0xffffff );
 
 
 	//createSkyBox(scene, "textures/cube/SwedishRoyalCastle/", ".jpg", new THREE.Vector3(100.0,150.0,100.0));
@@ -573,11 +579,24 @@ function animate() {
 
 function get_direction(node)
 {
-	var pLocal = new THREE.Vector3( 0, -1, 0 );
-	var pWorld = pLocal.applyMatrix3( node.matrixWorld );
+	var pLocal = new THREE.Vector3( 0, 1.0, 0 );
+/*	var pWorld = pLocal.applyMatrix3( node.matrixWorld );
 	var dir = pWorld.sub(node.position).normalize();
+*/
+	var angles = new THREE.Vector3( 0, 0, 0 );
+	angles.setEulerFromQuaternion( node.quaternion );
+	pLocal.applyEuler(angles, node.eulerOrder);
+	return pLocal;
+}
 
-	return dir;
+function radioControl_init()
+{
+
+}
+
+function radioControl_update()
+{
+
 }
 
 function render() {
@@ -595,16 +614,20 @@ function render() {
 			var v = new THREE.Vector3();
 			v.setEulerFromQuaternion(q);
 			var targetVal = $( "#ui-sliderRoll" ).slider("option", "value");
-			myPID.Execute(v.z, targetVal, clock.getDelta());
+			controlerRoll.Execute(v.z, targetVal, clock.getDelta());
+			controlerTilt.Execute(v.x, targetVal, clock.getDelta());
+			controlerYaw.Execute(v.y, targetVal, clock.getDelta());
 			var noise = Math.random() * $( "#ui-sliderNoise" ).slider("option", "value");
 			var wind = $( "#ui-sliderWind" ).slider("option", "value");
-			v.z = v.z + (myPID.outputCommand * 0.0007) + wind + noise;
-			myPID.currentValue = v.z;
+			v.z = v.z + (controlerRoll.outputCommand * 0.0007) + wind + noise + joystick.deltaX() / 500.0;
+			v.x = v.x + (controlerTilt.outputCommand * 0.0007) + noise - joystick.deltaY() / 500.0;
+			v.y = v.y + (controlerYaw.outputCommand * 0.0007) + noise;
+			controlerRoll.currentValue = v.z;
 			q = (new THREE.Quaternion).setFromEuler(v);
 			root.quaternion = q;
 
 			// Position
-			var currentPosition = root.position;
+			var currentPosition = root.position.clone();
 			var newPosition;
 
 			var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
@@ -613,27 +636,24 @@ function render() {
 			// Weight
 			var weightForceDiff = weightForce.clone();
 			weightForceDiff.multiplyScalar( 0.0001 );
-
 			allForces.add( weightForceDiff );
 			
 			// MotorForce
 			var root_dir = get_direction(root);
 			motorForce = root_dir.clone();
-//			var motorForceDiff = motorForce.clone();
-//			motorForceDiff.multiplyScalar( 1.0 );
+			allForces.add( motorForce.multiplyScalar( speed *0.01));
 
-			allForces.add( motorForce.multiplyScalar( speed ));
-
+			// Update pos
 			newPosition = currentPosition.clone();
 			newPosition.add(allForces);
 
-			if( newPosition.y < 0.0)
-				newPosition.y = 0.0;
+			if( newPosition.y < -0.04)
+				newPosition.y = -0.04;
 			root.position = newPosition;
 
-			update_line(weightForceRep, new THREE.Vector3( currentPosition.x, currentPosition.y, currentPosition.z ), weightForce);
-			update_line(motorForceRep, new THREE.Vector3( currentPosition.x, currentPosition.y, currentPosition.z ), motorForce);
-
+			// Visual force debug
+//			update_line(weightForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), weightForce);
+//			update_line(motorForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), motorForce);
 		}
 	});
 
