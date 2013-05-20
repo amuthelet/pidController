@@ -77,13 +77,13 @@
 
       #info {
         color: #fff;
-        position: relative;
-        top: 10px;
-        width: 100%;
+        position: absolute;
+        bottom: 0px;
+        width: 35%;
         text-align: left;
         z-index: 100;
         display:block;
-        font-size:80%;
+        font-size:70%;
 
       }
 
@@ -105,7 +105,7 @@
         position:absolute;
         z-index:10;
         padding-top: 40px;
-        opacity:0.95;
+        opacity:0.9;
       }     
 
       #chart {
@@ -127,8 +127,8 @@
 
 			#webgl {
 				color: #fff;
-				height: 400px;
-				width: 800px;
+				height: 100%;
+				width: 100%;
 				position:relative;
 			}
 
@@ -155,10 +155,10 @@
 			}
 
       #virtual_joystick {
-        width   : 800px;
-        height    : 400px;
+        width   : 100%;
+        height    : 100%;
         z-index:20px;
-        position : relative;
+        position : absolute;
       }
 
 			a { color: skyblue }
@@ -172,6 +172,31 @@
 
 		<div id="webgl">
     <div id="virtual_joystick">
+    </div>
+    <div id="info">
+      Simulation Quadcopter by Flamenco - v0.3 (Exp)</br>
+      </br>
+      
+      DESCRIPTION:</br>
+      - Simulateur de Quadcopter - Controlleur PID naïf</br>
+    </br>
+
+      PRE-REQUIS:</br>
+      - Affichage webgl, nécessite navigateur web récent (Chrome pour les meilleurs performances)</br>
+      - Ne marche pas sur tablettes iOS, marche peut-être sur tablettes Android..</br>
+      - Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js">VirtualJoystick.js</a></br>
+      </br>
+      FONCTIONS:</br>
+      - Rotation de la camera autour du multi: clic gauche + mouvement souris</br>
+      - Slider "Roll" permet de choisir une inclinaison cible pour le controlleur PID </br>
+      - Slider P permet d'ajuster le facteur "Proportionnel" du controlleur PID</br>
+      - Slider I permet d'ajuster le facteur "Intégral" du controlleur PID</br>
+      - Slider D permet d'ajuster le facteur "Dérivé" du controlleur PID</br>
+      - Slider Wind permet d'ajuster la force du vent latéral </br>
+      - Slider Noise permet d'ajuster l'amplitude d'une perturbation aléatoire</br>
+      </br>
+      Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
+      </br></br></br>
     </div>
 
   			<div id="ui">
@@ -283,31 +308,6 @@
       <canvas id="chartDerivative" class="chart" width="800px" height="100px"></canvas>
     </div>
     </div>
-    <div id="info">
-      Simulation Quadcopter - Flamenco - v0.2 (Exp)</br>
-      </br>
-      
-      Description:</br>
-      - Implémentation (très) naîve d'un controlleur PID pour mieux en comprendre les concepts..</br>
-    </br>
-
-      Pré-requis:</br>
-      - Affichage webgl, nécessite un navigateur web récent (idéalement Chrome pour de bonnes performances) sur PC, Mac ou Linux.</br>
-      - Ne marche pas sur tablettes iOS, marche peut-être sur tablettes Android..</br>
-      - Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js">VirtualJoystick.js</a></br>
-      </br>
-      Fonctions:</br>
-      - Rotation de la camera autour du multi: clic gauche + mouvement souris</br>
-      - Slider "Roll" permet de choisir une inclinaison cible pour le controlleur PID </br>
-      - Slider P permet d'ajuster le facteur "Proportionnel" du controlleur PID</br>
-      - Slider I permet d'ajuster le facteur "Intégral" du controlleur PID</br>
-      - Slider D permet d'ajuster le facteur "Dérivé" du controlleur PID</br>
-      - Slider Wind permet d'ajuster la force du vent latéral </br>
-      - Slider Noise permet d'ajuster l'amplitude d'une perturbation aléatoire</br>
-      </br>
-      Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
-      </br>
-    </div>
 
 		<script src="build/three.min.js"></script>
 		<script src="js/controls/OrbitControls.js"></script>
@@ -345,7 +345,7 @@
 		<script src="js/PIDController.js"></script>
 		<script src="js/myViewer.js"></script>
 		<script>
-			launchWebGL($("#webgl").width(),$("#webgl").height());
+			launchWebGL();
 		</script>
      <script type="text/javascript" src="js/smoothie.js"></script>
      <script type="text/javascript">

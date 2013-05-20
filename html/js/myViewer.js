@@ -55,12 +55,13 @@ var pointLight01, pointLight02, pointLight03;
 
 var joystick;
 
-function launchWebGL(width, height)
+function launchWebGL()
 {
 	log("Loading models ..."+width+" "+height);
 
+	height = height * 80.0 / 100.0;
 	viewportWidth = width;
-	viewportHeight = height;
+	viewportHeight = height + 80.0 / 100.0;
 
 	loader.options.convertUpAxis = true;
 	loader.load( './models/collada/quadroXL/QuadXL-noCamera.DAE', function ( collada ) {
@@ -557,7 +558,8 @@ function init() {
 }
 
 function onwinResize() {
-
+    viewportWidth = win.innerWidth;
+    viewportHeight = win.innerHeight;
 	cameraLookAt.aspect = viewportWidth / viewportHeight;
 	cameraLookAt.updateProjectionMatrix();
 
