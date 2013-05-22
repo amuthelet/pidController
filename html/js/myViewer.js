@@ -32,6 +32,8 @@ var dae, skin;
 var loader = new THREE.ColladaLoader();
 
 var controlerRoll, controlerTilt, controlerYaw;
+var currentRoll=0.0, currentTilt=0.0, currentYaw=0.0;
+var tiltLimit=false, rollLimit=false;
 
 var weightForce;
 var motorForce;
@@ -50,6 +52,9 @@ var isIncreasingTilt = false;
 var isDecreasingTilt = false;
 var isIncreasingYaw = false;
 var isDecreasingYaw = false;
+
+var root;
+var targetQuat = new THREE.Quaternion();
 
 var pointLight01, pointLight02, pointLight03;
 
@@ -76,6 +81,384 @@ function launchWebGL()
 		animate();
 
 	} );
+}
+
+// TODO: material replace seulement sur DAE et pas sur toute la scene
+
+function processModel(scene)
+{
+	log("Processing model...");
+
+	var material	= new THREE.MeshPhongMaterial({
+	ambient		: 0xffffff,
+	color		: 0xffffff,
+	shininess	: 10, 
+	specular	: 0xffffff,
+	shading		: THREE.SmoothShading,
+	});				
+
+	var toIntersect = [];
+	scene.traverse(function (child) 
+	{
+		if (child instanceof THREE.Mesh) {
+			toIntersect.push(child);
+			child.castShadow = true;
+			child.receiveShadow = true;
+			child.material = material;
+			//log(child.name);
+			objects.push(child);
+			child.useQuaternion = true;
+		}
+		if( child.name == "Plane001-node" ){
+			child.visible = false;
+		}
+		if( child.name == "digital_single_lens_camera-node") {
+			child.castShadow = false;
+			child.receiveShadow = false;    					
+		}
+		if( child.name == "Lens-node") {    					
+			child.castShadow = false;
+			child.receiveShadow = false;    					
+		}
+	});
+
+}
+
+function init_pid()
+{
+	controlerRoll = new PIDController(0.2, 0.01, 1.0);
+	controlerTilt = new PIDController(0.2, 0.01, 1.0);
+	controlerYaw = new PIDController(0.2, 0.01, 1.0);
+	return;
+}
+
+function init() {
+
+	log("Init...");
+	init_pid();
+	container = document.createElement( 'div' );
+	var parentDoc = document.getElementById("webgl");
+	parentDoc.appendChild( container );
+
+	scene = new THREE.Scene();
+
+	cameraLookAt = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
+	cameraLookAt.position.set( 9, 2, -9 );
+
+	cameraOrbit = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
+	cameraOrbit.position.set( 7, 2, 7 );
+
+	cameraOrtho = new THREE.OrthographicCamera( -halfWidth, halfWidth, halfHeight, -halfHeight, -10000, 10000 );
+	cameraOrtho.position.z = 100;
+
+	var dummy = new THREE.Object3D();
+	dummy.name = "ROOT";
+	dummy.useQuaternion = true;
+	root = dummy;
+	scene.add(dummy);
+
+	createLights(scene);
+	root.add( dae );
+	processModel(scene);
+
+	//weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ), 0x000000 );
+	//motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), 0xffffff );
+
+	createSkyBox(scene, "textures/cube/Park2/", ".jpg", new THREE.Vector3(500.0,550.0,500.0));
+	
+	projector = new THREE.Projector();
+
+	renderer = new THREE.WebGLRenderer({
+		antialias		: false,	// to get smoother output
+		preserveDrawingBuffer	: false,	// to allow screenshot
+		alpha : true,
+		transparency: true,
+	});
+//	renderer = new THREE.CanvasRenderer();
+	renderer.setSize( width, height );
+	renderer.setClearColorHex( 0x727272, 1 );
+	renderer.autoClear = false;
+	container.appendChild( renderer.domElement );
+
+	renderer.shadowMapEnabled = true;
+	renderer.shadowMapSoft = true;
+	renderer.shadowMapBias = 0.001;
+	renderer.gammaInput = true;
+	renderer.gammaOutput = true;
+
+	// Ground
+	createPlane(scene, new THREE.Vector3(0,-3.0, 0), 
+		new THREE.Vector3(-1.57079633,0,0),
+		new THREE.Vector3(10000.0,10000.0,10000.0)
+	);
+
+	controls = new THREE.OrbitControls( cameraOrbit );
+	//controls.addEventListener( 'change', renderer );
+
+	var shaderBleach = THREE.BleachBypassShader;
+	var effectBleach = new THREE.ShaderPass( shaderBleach );
+	effectBleach.uniforms[ "opacity" ].value = 0.95;
+
+	var shaderSepia = THREE.SepiaShader;
+	var effectSepia = new THREE.ShaderPass( shaderSepia );
+	effectSepia.uniforms[ "amount" ].value = 0.9;
+
+	var shaderVignette = THREE.VignetteShader;
+	var effectVignette = new THREE.ShaderPass( shaderVignette );
+	effectVignette.uniforms[ "offset" ].value = 0.95;
+	effectVignette.uniforms[ "darkness" ].value = 1.6;
+
+	var shaderCopy = THREE.CopyShader;	
+	var effectCopy = new THREE.ShaderPass( shaderCopy );
+
+	var effectBloom = new THREE.BloomPass( 0.2 );
+	var effectFilmBW = new THREE.FilmPass( 0.25, 0.3, 1024, false );
+
+	var effectHBlur = new THREE.ShaderPass( THREE.HorizontalBlurShader );
+	effectHBlur.uniforms[ 'h' ].value = 0.3 / ( width / 2 );
+
+	var effectVBlur = new THREE.ShaderPass( THREE.VerticalBlurShader );
+	effectVBlur.uniforms[ 'v' ].value = 0.3 / ( height / 2 );
+
+	var effectColorify1 = new THREE.ShaderPass( THREE.ColorifyShader );
+	effectColorify1.uniforms[ 'color' ].value.setRGB( 1, 0.8, 0.8 );
+	var effectColorify2 = new THREE.ShaderPass( THREE.ColorifyShader );
+	effectColorify2.uniforms[ 'color' ].value.setRGB( 1, 0.75, 0.5 );
+
+	var clearMask = new THREE.ClearMaskPass();
+
+	var renderMask = new THREE.MaskPass( scene, cameraLookAt );
+	var renderMaskInverse = new THREE.MaskPass( scene, cameraLookAt );
+	renderMaskInverse.inverse = true;
+
+	rtParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, stencilBuffer: true };
+
+	var rtWidth  = width;
+	var rtHeight = height;
+
+	processorChain = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtWidth, rtHeight, rtParameters ) );
+
+	sceneRTT = new THREE.Scene();
+	var renderBackground = new THREE.RenderPass( sceneBG, cameraOrtho );
+	var renderModel = new THREE.RenderPass( scene, cameraLookAt );
+
+	effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+	effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
+	effectFXAA.renderToScreen = true;
+
+	brightnessContrast = new THREE.ShaderPass(THREE.BrightnessContrastShader);
+	brightnessContrast.uniforms[ 'brightness' ].value = -0.15;
+	brightnessContrast.uniforms[ 'contrast' ].value = 0.6;
+
+	hueSaturation = new THREE.ShaderPass(THREE.HueSaturationShader);
+	hueSaturation.uniforms[ 'hue' ].value = 0.0;
+	hueSaturation.uniforms[ 'saturation' ].value = -0.65;
+
+//	renderModel.clear = false;
+
+//  processorChain.addPass( renderBackground );
+	processorChain.addPass( renderModel );
+//	processorChain.addPass( effectHBlur );
+//	processorChain.addPass( effectVBlur );
+	
+//	processorChain.addPass( effectBloom );
+	processorChain.addPass( effectFilmBW );
+//	processorChain.addPass( effectColorify1 );
+//	processorChain.addPass( effectColorify2 );
+	processorChain.addPass( effectBleach );
+//	processorChain.addPass( effectVignette );
+	processorChain.addPass(brightnessContrast);
+	processorChain.addPass(hueSaturation);
+	processorChain.addPass( effectFXAA );		
+/*
+	var texture = THREE.ImageUtils.loadTexture( "textures/mikrokopter/FlamencoNacelle01.png" );
+	texture.minFilter = THREE.LinearFilter;
+	texture.magFilter = THREE.LinearFilter;
+	texture.format = THREE.RGBFormat;
+	texture.generateMipmaps = true;
+
+	createTexturedPlane(scene, new THREE.Vector3(-4,1.5, -3), 
+		new THREE.Vector3(0,0.8,0),
+		new THREE.Vector3(5.0,4.0,1.0),
+		texture
+	);
+
+	var texture2 = THREE.ImageUtils.loadTexture( "textures/mikrokopter/FlamencoNacelle02.png" );
+	texture.minFilter = THREE.LinearFilter;
+	texture.magFilter = THREE.LinearFilter;
+	texture.format = THREE.RGBFormat;
+	texture.generateMipmaps = true;
+
+	createTexturedPlane(scene, new THREE.Vector3(4,1.5, -3), 
+		new THREE.Vector3(0,-0.8,0),
+		new THREE.Vector3(5.0,4.0,1.0),
+		texture2
+	);
+*/
+/*	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.top = '0px';
+	container.appendChild( stats.domElement );
+*/
+	win.addEventListener( 'resize', onwinResize, false );
+
+	renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+	renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+	onwinResize();
+
+}
+
+function onwinResize() {
+    viewportWidth = win.innerWidth;
+    viewportHeight = win.innerHeight;
+	cameraLookAt.aspect = viewportWidth / viewportHeight;
+	cameraLookAt.updateProjectionMatrix();
+
+	cameraOrtho.left = -halfWidth;
+	cameraOrtho.right = halfWidth;
+	cameraOrtho.top = halfHeight;
+	cameraOrtho.bottom = -halfHeight;
+
+	cameraOrtho.updateProjectionMatrix();
+
+	renderer.setSize( viewportWidth, viewportHeight );
+	processorChain.reset( new THREE.WebGLRenderTarget( viewportWidth, viewportHeight, rtParameters ) );
+	effectFXAA.uniforms[ 'resolution' ].value.set( 1 /  viewportWidth, 1 /  viewportHeight );
+
+}
+
+
+var t = 0;
+var clock = new THREE.Clock();
+
+function animate() {
+
+	var delta = clock.getDelta();
+	requestAnimationFrame( animate );
+	if ( t > 1 ) t = 0;
+
+	controls.update();
+	render();
+//	stats.update();
+}
+
+function radioControl_init()
+{
+
+}
+
+function radioControl_update()
+{
+
+}
+var counter = 0;
+function render() {
+
+	var timer = Date.now() * 0.0005;
+	{
+		var perSecond = 1; // clock.getDelta() * 50000.0;
+
+		var noise = (Math.cos( clock.elapsedTime*2.0) * 0.1 * Math.random() * $( "#ui-sliderNoise" ).slider("option", "value")) * perSecond;
+		var wind = ($( "#ui-sliderWind" ).slider("option", "value")) * perSecond;
+
+		var angleLimit = 1.6;
+
+		//////////// ROTATION ///////////////
+		// Tilt
+		var targetTilt = $( "#ui-sliderRoll" ).slider("option", "value");
+		controlerTilt.Execute(currentTilt, radioTilt, clock.getDelta());
+		var rotationAngleTilt = controlerTilt.outputCommand * 0.0007 + noise ;
+/*		if( ((currentTilt + rotationAngleTilt) > angleLimit) || ((currentTilt + rotationAngleTilt) < -angleLimit) )
+		{
+			rotationAngleTilt = 0.0;
+			tiltLimit = true;
+		}
+		else 
+			tiltLimit = false;
+*/
+		var root_axisX = new THREE.Vector3( 1, 0, 0);
+		var quaternionX = new THREE.Quaternion();
+		quaternionX.setFromAxisAngle( root_axisX, rotationAngleTilt );
+		root.quaternion.multiply(quaternionX);
+		currentTilt += rotationAngleTilt;
+
+		// Yaw
+		controlerYaw.Execute(currentYaw, radioYaw, clock.getDelta());
+		var rotationAngleYaw = controlerYaw.outputCommand * 0.0007 + noise;
+	
+		var root_axisY = new THREE.Vector3( 0, 1, 0);
+		var quaternionY = new THREE.Quaternion();
+		quaternionY.setFromAxisAngle( root_axisY, rotationAngleYaw );
+		root.quaternion.multiply(quaternionY);
+		currentYaw += rotationAngleYaw;
+
+		// Roll
+		var targetRoll = $( "#ui-sliderRoll" ).slider("option", "value");
+		controlerRoll.Execute(currentRoll, targetRoll, clock.getDelta());
+		var rotationAngleRoll = (controlerRoll.outputCommand * 0.0007) + wind + noise + (joystick.deltaX() / 500.0)*perSecond;
+/*		if( ((currentRoll + rotationAngleRoll) > angleLimit) || ((currentRoll + rotationAngleTilt) < -angleLimit))
+		{
+			rotationAngleRoll = 0.0;
+			rollLimit = true;
+		}
+		else
+			rollLimit = false;
+*/		
+		var root_axisZ = new THREE.Vector3( 0, 0, 1);
+		var quaternionZ = new THREE.Quaternion();
+		quaternionZ.setFromAxisAngle( root_axisZ, rotationAngleRoll );
+		root.quaternion.multiply(quaternionZ);
+		currentRoll += rotationAngleRoll;
+
+		/////////////// Position ////////////
+		var currentPosition = root.position.clone();
+		var newPosition;
+
+		var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
+		var allForces = new THREE.Vector3( 0, 0, 0 );
+
+		// Weight
+		var weightForceDiff = weightForce.clone();
+		weightForceDiff.multiplyScalar( 0.02 );
+		allForces.add( weightForceDiff );
+
+		// MotorForce
+		motorForce = root_axisY.clone(); 
+		motorForce.applyQuaternion(root.quaternion);
+		radioThrottle = -joystick.deltaY() * 0.005;
+
+		if( radioThrottle < 0.0 )
+				radioThrottle = 0.0;
+
+		allForces.add( motorForce.multiplyScalar( radioThrottle ));
+
+		// Update pos
+		newPosition = currentPosition.clone();
+		newPosition.add(allForces);
+
+		if( newPosition.y < -1.0)
+			newPosition.y = -1.0;
+		
+		root.position = newPosition;
+
+		cameraLookAt.lookAt(newPosition);
+		pointLight01.position = newPosition.clone().add(new THREE.Vector3(-6,6,-2));
+		pointLight02.position = newPosition.clone().add(new THREE.Vector3(6,1,-2));
+		pointLight03.position = newPosition.clone().add(new THREE.Vector3(0,2,6));
+		pointLight01.target.position = newPosition.clone();
+		pointLight02.target.position = newPosition.clone();
+		pointLight03.target.position = newPosition.clone();
+
+		// Visual rep of forces
+	//			update_line(weightForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), weightForce);
+	//			update_line(motorForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), motorForce);
+
+		//renderer.render(scene, camera);
+	}
+
+	renderer.clear();
+	processorChain.render(delta);
 }
 
 function createFlare(scene, position, color)
@@ -260,18 +643,18 @@ function createPlane(scene, position, rotation, scale)
 {	
 	log("Creating new plane ...");
 
-	var material	= new THREE.MeshPhongMaterial({
+	var materialPlane	= new THREE.MeshPhongMaterial({
 	ambient		: 0xffffff,
 	color		: 0xffffff,
 	shininess	: 10, 
 	specular	: 0xffffff,
 	shading		: THREE.SmoothShading,
 	transparent     : true,
-	opacity          : 0.6,
+	opacity          : 0.65,
 	});		
 
 	var geometry = new THREE.PlaneGeometry(1, 1);
-	var mesh = new THREE.Mesh( geometry, material );
+	var mesh = new THREE.Mesh( geometry, materialPlane );
 	mesh.rotation = rotation;
 	mesh.position = position;
 	mesh.scale = scale;
@@ -280,47 +663,6 @@ function createPlane(scene, position, rotation, scale)
 	mesh.castShadow = true;
 	mesh.receiveShadow = true;
 	mesh.name = "newPlaneMesh";
-
-}
-
-function processModel(scene)
-{
-	log("Processing model...");
-
-	var material	= new THREE.MeshPhongMaterial({
-	ambient		: 0xffffff,
-	color		: 0xffffff,
-	shininess	: 10, 
-	specular	: 0xffffff,
-	shading		: THREE.SmoothShading,
-	});				
-
-	var dashed = new THREE.LineDashedMaterial( { color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } )
-
-	var toIntersect = [];
-	scene.traverse(function (child) 
-	{
-			if (child instanceof THREE.Mesh) {
-			toIntersect.push(child);
-			child.castShadow = true;
-			child.receiveShadow = true;
-			child.material = material;
-			//log(child.name);
-			objects.push(child);
-			//child.useQuaternion = false;
-		}
-		if( child.name == "Plane001-node" ){
-			child.visible = false;
-		}
-		if( child.name == "digital_single_lens_camera-node") {
-			child.castShadow = false;
-			child.receiveShadow = false;    					
-		}
-		if( child.name == "Lens-node") {    					
-			child.castShadow = false;
-			child.receiveShadow = false;    					
-		}
-	});
 
 }
 
@@ -376,349 +718,6 @@ function update_line(line, startVertex, endVertex)
 	line.verticesNeedUpdate = true;
 }
 
-function init_pid()
-{
-	controlerRoll = new PIDController(0.2, 0.01, 1.0);
-	controlerTilt = new PIDController(0.2, 0.01, 1.0);
-	controlerYaw = new PIDController(0.2, 0.01, 1.0);
-	return;
-}
-
-function init() {
-
-	log("Init...");
-	init_pid();
-	container = document.createElement( 'div' );
-	var parentDoc = document.getElementById("webgl");
-	parentDoc.appendChild( container );
-
-	scene = new THREE.Scene();
-	scene.add( dae );
-
-	cameraLookAt = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
-	cameraLookAt.position.set( 7, 2, 7 );
-
-	cameraOrbit = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
-	cameraOrbit.position.set( 7, 2, 7 );
-
-	cameraOrtho = new THREE.OrthographicCamera( -halfWidth, halfWidth, halfHeight, -halfHeight, -10000, 10000 );
-	cameraOrtho.position.z = 100;
-
-	createLights(scene);
-	processModel(scene);
-
-
-	//weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ), 0x000000 );
-	//motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), 0xffffff );
-
-
-	createSkyBox(scene, "textures/cube/Park2/", ".jpg", new THREE.Vector3(100.0,150.0,100.0));
-	
-	projector = new THREE.Projector();
-
-	renderer = new THREE.WebGLRenderer({
-		antialias		: false,	// to get smoother output
-		preserveDrawingBuffer	: false,	// to allow screenshot
-		alpha : true,
-		transparency: true,
-	});
-//	renderer = new THREE.CanvasRenderer();
-	renderer.setSize( width, height );
-	renderer.setClearColorHex( 0x727272, 1 );
-	renderer.autoClear = false;
-	container.appendChild( renderer.domElement );
-
-	renderer.shadowMapEnabled = true;
-	renderer.shadowMapSoft = true;
-	renderer.shadowMapBias = 0.001;
-	renderer.gammaInput = true;
-	renderer.gammaOutput = true;
-
-	// Ground
-	createPlane(scene, new THREE.Vector3(0,-3.0, 0), 
-		new THREE.Vector3(-1.57079633,0,0),
-		new THREE.Vector3(10000.0,10000.0,10000.0)
-	);
-
-	controls = new THREE.OrbitControls( cameraOrbit );
-	//controls.addEventListener( 'change', renderer );
-
-	var shaderBleach = THREE.BleachBypassShader;
-	var effectBleach = new THREE.ShaderPass( shaderBleach );
-	effectBleach.uniforms[ "opacity" ].value = 0.95;
-
-	var shaderSepia = THREE.SepiaShader;
-	var effectSepia = new THREE.ShaderPass( shaderSepia );
-	effectSepia.uniforms[ "amount" ].value = 0.9;
-
-	var shaderVignette = THREE.VignetteShader;
-	var effectVignette = new THREE.ShaderPass( shaderVignette );
-	effectVignette.uniforms[ "offset" ].value = 0.95;
-	effectVignette.uniforms[ "darkness" ].value = 1.6;
-
-	var shaderCopy = THREE.CopyShader;	
-	var effectCopy = new THREE.ShaderPass( shaderCopy );
-
-	var effectBloom = new THREE.BloomPass( 0.2 );
-	var effectFilmBW = new THREE.FilmPass( 0.25, 0.3, 512, false );
-
-	var effectHBlur = new THREE.ShaderPass( THREE.HorizontalBlurShader );
-	effectHBlur.uniforms[ 'h' ].value = 0.3 / ( width / 2 );
-
-	var effectVBlur = new THREE.ShaderPass( THREE.VerticalBlurShader );
-	effectVBlur.uniforms[ 'v' ].value = 0.3 / ( height / 2 );
-
-	var effectColorify1 = new THREE.ShaderPass( THREE.ColorifyShader );
-	effectColorify1.uniforms[ 'color' ].value.setRGB( 1, 0.8, 0.8 );
-	var effectColorify2 = new THREE.ShaderPass( THREE.ColorifyShader );
-	effectColorify2.uniforms[ 'color' ].value.setRGB( 1, 0.75, 0.5 );
-
-	var clearMask = new THREE.ClearMaskPass();
-
-	var renderMask = new THREE.MaskPass( scene, cameraLookAt );
-	var renderMaskInverse = new THREE.MaskPass( scene, cameraLookAt );
-	renderMaskInverse.inverse = true;
-
-	rtParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, stencilBuffer: true };
-
-	var rtWidth  = width;
-	var rtHeight = height;
-
-	processorChain = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtWidth, rtHeight, rtParameters ) );
-
-	sceneRTT = new THREE.Scene();
-	var renderBackground = new THREE.RenderPass( sceneBG, cameraOrtho );
-	var renderModel = new THREE.RenderPass( scene, cameraLookAt );
-
-	effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-	effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
-	effectFXAA.renderToScreen = true;
-
-	brightnessContrast = new THREE.ShaderPass(THREE.BrightnessContrastShader);
-	brightnessContrast.uniforms[ 'brightness' ].value = -0.15;
-	brightnessContrast.uniforms[ 'contrast' ].value = 0.6;
-
-	hueSaturation = new THREE.ShaderPass(THREE.HueSaturationShader);
-	hueSaturation.uniforms[ 'hue' ].value = 0.0;
-	hueSaturation.uniforms[ 'saturation' ].value = -0.85;
-
-//	renderModel.clear = false;
-
-//  processorChain.addPass( renderBackground );
-	processorChain.addPass( renderModel );
-//	processorChain.addPass( effectHBlur );
-//	processorChain.addPass( effectVBlur );
-	
-//	processorChain.addPass( effectBloom );
-	processorChain.addPass( effectFilmBW );
-//	processorChain.addPass( effectColorify1 );
-//	processorChain.addPass( effectColorify2 );
-	processorChain.addPass( effectBleach );
-//	processorChain.addPass( effectVignette );
-	processorChain.addPass(brightnessContrast);
-	processorChain.addPass(hueSaturation);
-	processorChain.addPass( effectFXAA );		
-/*
-	var texture = THREE.ImageUtils.loadTexture( "textures/mikrokopter/FlamencoNacelle01.png" );
-	texture.minFilter = THREE.LinearFilter;
-	texture.magFilter = THREE.LinearFilter;
-	texture.format = THREE.RGBFormat;
-	texture.generateMipmaps = true;
-
-	createTexturedPlane(scene, new THREE.Vector3(-4,1.5, -3), 
-		new THREE.Vector3(0,0.8,0),
-		new THREE.Vector3(5.0,4.0,1.0),
-		texture
-	);
-
-	var texture2 = THREE.ImageUtils.loadTexture( "textures/mikrokopter/FlamencoNacelle02.png" );
-	texture.minFilter = THREE.LinearFilter;
-	texture.magFilter = THREE.LinearFilter;
-	texture.format = THREE.RGBFormat;
-	texture.generateMipmaps = true;
-
-	createTexturedPlane(scene, new THREE.Vector3(4,1.5, -3), 
-		new THREE.Vector3(0,-0.8,0),
-		new THREE.Vector3(5.0,4.0,1.0),
-		texture2
-	);
-*/
-/*	stats = new Stats();
-	stats.domElement.style.position = 'absolute';
-	stats.domElement.style.top = '0px';
-	container.appendChild( stats.domElement );
-*/
-	win.addEventListener( 'resize', onwinResize, false );
-
-	renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
-	renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
-	onwinResize();
-
-}
-
-function onwinResize() {
-    viewportWidth = win.innerWidth;
-    viewportHeight = win.innerHeight;
-	cameraLookAt.aspect = viewportWidth / viewportHeight;
-	cameraLookAt.updateProjectionMatrix();
-
-	cameraOrtho.left = -halfWidth;
-	cameraOrtho.right = halfWidth;
-	cameraOrtho.top = halfHeight;
-	cameraOrtho.bottom = -halfHeight;
-
-	cameraOrtho.updateProjectionMatrix();
-
-	renderer.setSize( viewportWidth, viewportHeight );
-	processorChain.reset( new THREE.WebGLRenderTarget( viewportWidth, viewportHeight, rtParameters ) );
-	effectFXAA.uniforms[ 'resolution' ].value.set( 1 /  viewportWidth, 1 /  viewportHeight );
-
-}
-
-
-var t = 0;
-var clock = new THREE.Clock();
-
-function animate() {
-
-	var delta = clock.getDelta();
-	requestAnimationFrame( animate );
-	if ( t > 1 ) t = 0;
-
-	controls.update();
-	render();
-//	stats.update();
-}
-
-function get_direction(node)
-{
-	var pLocal = new THREE.Vector3( 0, 1.0, 0 );
-/*	var pWorld = pLocal.applyMatrix3( node.matrixWorld );
-	var dir = pWorld.sub(node.position).normalize();
-*/
-	var angles = new THREE.Vector3( 0, 0, 0 );
-	angles.setEulerFromQuaternion( node.quaternion );
-	pLocal.applyEuler(angles, node.eulerOrder);
-	return pLocal;
-}
-
-function radioControl_init()
-{
-
-}
-
-function radioControl_update()
-{
-
-}
-
-function render() {
-
-	var timer = Date.now() * 0.0005;
-
-	scene.traverse(function (child) 
-	{
-		if (child.name == "ROOT") 
-		{
-			var root  = child;
-
-
-			// Orientation
-			var q = root.quaternion;
-			var v = new THREE.Vector3();
-			v.setEulerFromQuaternion(q, 'XYZ');
-			var targetVal = $( "#ui-sliderRoll" ).slider("option", "value");
-			controlerRoll.Execute(v.z, targetVal, clock.getDelta());
-			controlerTilt.Execute(v.x, targetVal, clock.getDelta());
-			controlerYaw.Execute(v.y, v.y, clock.getDelta());
-			var noise = Math.random() * $( "#ui-sliderNoise" ).slider("option", "value");
-			var wind = $( "#ui-sliderWind" ).slider("option", "value");
-			v.z = v.z + (controlerRoll.outputCommand * 0.0007) + wind + noise + joystick.deltaX() / 1000.0;
-			v.x = v.x + (controlerTilt.outputCommand * 0.0007) + noise + radioTilt;
-			v.y = v.y + radioYaw;
-			controlerRoll.currentValue = v.z;
-			controlerTilt.currentValue = v.x;
-			controlerYaw.currentValue = v.y;
-			q = (new THREE.Quaternion).setFromEuler(v);
-			//root.quaternion = q;
-			
-			var angles = new THREE.Vector3( 0, 0, 0 );
-			angles.setEulerFromQuaternion( root.quaternion, 'YXZ' );
-
-			var root_axisX = new THREE.Vector3( 1, 0, 0 );
-			root.localToWorld( root_axisX );
-			root_axisX.sub(root.position.clone().multiplyScalar( 10.0 ));
-			root_axisX.normalize();
-//			root_axisX.applyEuler(angles, root.eulerOrder);
-			root.rotateOnAxis(root_axisX, (controlerTilt.outputCommand * 0.0007) + noise + radioTilt);
-
-			var root_axisY = new THREE.Vector3( 0, 1, 0 );
-			root.localToWorld( root_axisY );
-			root_axisY.sub(root.position.clone().multiplyScalar( 10.0 ));
-			root_axisY.normalize();
-//			root_axisY.applyEuler(angles, root.eulerOrder);
-			root.rotateOnAxis(root_axisY,radioYaw);
-
-			var root_axisZ = new THREE.Vector3( 0, 0, 1 );
-			root.localToWorld( root_axisZ );
-			root_axisZ.sub(root.position.clone().multiplyScalar( 10.0 ));
-			root_axisZ.normalize();
-//			root_axisZ.applyEuler(angles, root.eulerOrder);
-			root.rotateOnAxis(root_axisZ, (controlerRoll.outputCommand * 0.0007) + wind + noise + joystick.deltaX() / 1000.0);
-
-			// Position
-			var currentPosition = root.position.clone();
-			var newPosition;
-
-			var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
-			var allForces = new THREE.Vector3( 0, 0, 0 );
-
-			// Weight
-			var weightForceDiff = weightForce.clone();
-			weightForceDiff.multiplyScalar( 0.001 );
-			allForces.add( weightForceDiff );
-			
-			// MotorForce
-			var root_dir = get_direction(root);
-			motorForce = root_dir.clone();
-
-			radioThrottle = -joystick.deltaY() * 0.0003;
-
-			if( radioThrottle < 0.0 )
-					radioThrottle = 0.0;
-
-			allForces.add( motorForce.multiplyScalar( radioThrottle));
-
-			// Update pos
-			newPosition = currentPosition.clone();
-			newPosition.add(allForces);
-
-			if( newPosition.y < -0.04)
-				newPosition.y = -0.04;
-			root.position = newPosition;
-
-			var newPositionScaled = newPosition.clone().multiplyScalar( 10.0 ); 
-
-			cameraLookAt.lookAt(newPositionScaled);
-			pointLight01.position = newPositionScaled.clone().add(new THREE.Vector3(-5,5,-2));
-			pointLight02.position = newPositionScaled.clone().add(new THREE.Vector3(5,1,-2));
-			pointLight03.position = newPositionScaled.clone().add(new THREE.Vector3(0,2,5));
-			pointLight01.target.position = newPositionScaled.clone();
-			pointLight02.target.position = newPositionScaled.clone();
-			pointLight03.target.position = newPositionScaled.clone();
-
-
-			// Visual rep of forces
-//			update_line(weightForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), weightForce);
-//			update_line(motorForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), motorForce);
-		}
-	});
-
-	//renderer.render(scene, camera);
-	renderer.clear();
-	processorChain.render(delta);
-}
 
 function onDocumentMouseMove( event ) {
 
@@ -751,29 +750,28 @@ function onDocumentMouseUp( event ) {
 }
 
 function increaseTilt() {
-
-	radioTilt += 0.01; 
+	radioTilt += 0.08; 
 	radioTiltTouched = true;
 	isIncreasingTilt = true;
 }
 
 function decreaseTilt() {
 
-	radioTilt -= 0.01; 
+	radioTilt += -0.08; 
 	radioTiltTouched = true;
 	isDecreasingTilt = true;
 }
 
 function increaseYaw() {
 
-	radioYaw = 0.015; 
+	radioYaw += 0.08; 
 	radioYawTouched = true;
 	isIncreasingYaw = true;
 }
 
 function decreaseYaw() {
 
-	radioYaw = -0.015; 
+	radioYaw += -0.08; 
 	radioYawTouched = true;
 	isDecreasingYaw = true;
 }

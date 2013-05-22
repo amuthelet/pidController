@@ -41,7 +41,6 @@
 
           }); 
           $(document).keyup(function(event) {
-            console.log(event.which);
             if (event.which == 81) {
                 isIncreasingYaw = false;
              }
@@ -58,9 +57,9 @@
 
       setInterval(function() {
         if( (isIncreasingTilt === false) && (isDecreasingTilt === false) )
-            radioTilt = 0.0;
+            radioTilt = radioTilt;
         if( (isIncreasingYaw === false) && (isDecreasingYaw === false) )
-            radioYaw = 0.0;
+            radioYaw = radioYaw;
       }, 100);
 
 
@@ -76,14 +75,16 @@
 			}
 
       #info {
+        background-color: #000000;
         color: #fff;
         position: absolute;
-        bottom: 0px;
-        width: 35%;
+        top: 0px;
+        width: 250px;
         text-align: left;
         z-index: 100;
         display:block;
-        font-size:70%;
+        font-size:85%;
+        opacity:0.7;
 
       }
 
@@ -100,23 +101,26 @@
 
       #ui {
         color: #fff;
+        background-color: #000;
         width: 200px;
-        height:200px;
+        height:180px;
         position:absolute;
         z-index:10;
-        padding-top: 40px;
+        right:0px;
+        top: 0px;
+        padding-top: 0px;
         opacity:0.9;
       }     
 
       #chart {
         color: #fff;
         height:380px;
-        width: 250px;
+        width: 200px;
         position:absolute;
         text-align:left;
-        right:10px;
+        right:0px;
         z-index:10;
-        padding-top: 20px;
+        top: 180px;
         opacity:0.8;
       }
       
@@ -134,7 +138,7 @@
 
 			.slider {
 				height:15px;
-				width:100px;
+				width:80px;
 			}
 
 			.text {
@@ -174,7 +178,7 @@
     <div id="virtual_joystick">
     </div>
     <div id="info">
-      Simulation Quadcopter by Flamenco - v0.3 (Exp)</br>
+      <font size="4">Simulation Quadcopter by Flamenco - v0.3 (Exp)</font></br>
       </br>
       
       DESCRIPTION:</br>
@@ -187,11 +191,14 @@
       - Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js">VirtualJoystick.js</a></br>
       </br>
       FONCTIONS:</br>
-      - Rotation de la camera autour du multi: clic gauche + mouvement souris</br>
-      - Slider "Roll" permet de choisir une inclinaison cible pour le controlleur PID </br>
-      - Slider P permet d'ajuster le facteur "Proportionnel" du controlleur PID</br>
-      - Slider I permet d'ajuster le facteur "Intégral" du controlleur PID</br>
-      - Slider D permet d'ajuster le facteur "Dérivé" du controlleur PID</br>
+      <font color="red">- Controle Gazs: clic souris gauche au centre de l'écran + glissé vertical</br>
+      - Controle Roulis: clic souris gauche au centre de l'écran + glissé horizontal</br>
+      - Controle Tangage: Touches clavier Z,S</br>
+      - Controle Lacet: Touches clavier Q,D</br></font>
+      - Slider "Roll" permet de choisir une inclinaison cible Roll pour le controlleur PID </br>
+      - Slider P permet d'ajuster le facteur "Proportionnel" des controlleurs PID</br>
+      - Slider I permet d'ajuster le facteur "Intégral" des controlleurs PID</br>
+      - Slider D permet d'ajuster le facteur "Dérivé" des controlleurs PID</br>
       - Slider Wind permet d'ajuster la force du vent latéral </br>
       - Slider Noise permet d'ajuster l'amplitude d'une perturbation aléatoire</br>
       </br>

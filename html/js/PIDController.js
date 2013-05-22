@@ -1,7 +1,6 @@
 function PIDController(Kp, Ki, Kd)
 {
 	this.error = 0.0;
-	this.currentValue = 0.0;
 	this.previousError = 0.0;
 	this.integral = 0.0;
 	this.derivative = 0.0;
@@ -28,6 +27,14 @@ PIDController.prototype.Execute = function(currentValue, targetValue, dt)
 	this.derivative = (this.error - this.previousError) / dt;
 	this.outputCommand = this.Kp * this.error + this.Ki * this.integral + this.Kd * this.derivative;
 	this.previousError = this.error;
+/*
+	this.errorQuat = targetValue.inverse().multiply(currentValue);
+	this.error = this.errorQuat.length();
+	this.integral = this.integral + this.error*dt;
+	this.derivative = (this.error - this.previousError) / dt;
+	this.outputCommand = this.Kp * this.error + this.Ki * this.integral + this.Kd * this.derivative;
+	this.previousError = this.error;
+*/
 	return;
 }
 
