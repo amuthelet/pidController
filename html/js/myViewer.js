@@ -376,9 +376,9 @@ function render() {
 	perSecond = deltaTime * 0.01;
 
 	var noise = (Math.cos( currentTime * 0.000000000001) * $( "#ui-sliderNoise" ).slider("option", "value"));
-	var wind = ($( "#ui-sliderWind" ).slider("option", "value"));
+	var wind = ($( "#ui-sliderWind" ).slider("option", "value"))*perSecond;
 
-	joystick.diffX = 0.02;
+	joystick.diffX = 0.006;
 	joystick.diffY = 0.004;
 
 	//////////// ROTATION ///////////////

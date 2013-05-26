@@ -11,6 +11,8 @@
 
   		<script>
   			$(function() {
+          $("#accordion").accordion({ heightStyle: "content", collapsible: true });
+
     			$( "#ui-sliderRoll" ).slider({min:-1.0, max:1.0, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}});
     			$( "#ui-sliderTilt" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtTilt").html(ui.value); return;}});
     			$( "#ui-sliderYaw" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtYaw").html(ui.value); return;}});
@@ -83,23 +85,15 @@
 			}
 
       #info {
-        background-color: #000000;
-        color: #fff;
-        position: absolute;
-        top: 0px;
-        width: 250px;
+        position: relative;
         text-align: left;
         z-index: 100;
-        display:block;
-        font-size:85%;
-        opacity:0.7;
-
+        font-size:100%;
       }
 
       h4 {
         color: #fff;
-        font-size:80%;
-        display:block;
+        font-size:10%;
         padding-top:0px;
         padding-bottom:0px;
         margin-top: 0px;
@@ -107,36 +101,32 @@
         position:absolute;
       }
 
-      #ui {
-        color: #fff;
-        background-color: #000;
-        width: 200px;
-        height:180px;
+      #accordion {
+        width: 220px;
+        height:25%;
         position:absolute;
         z-index:10;
         right:0px;
         top: 0px;
         padding-top: 0px;
         opacity:0.9;
+        font-size:70%;
+
       }     
 
-      #chart {
-        color: #fff;
-        height:380px;
+      .chart {
+        height:70px;
+        width:180px;        
+      }
+
+       #chart {
+        height:300px;
         width: 200px;
-        position:absolute;
-        text-align:left;
-        right:0px;
+        position:relative;
         z-index:10;
-        top: 180px;
         opacity:0.8;
       }
       
-      .chart {
-        height:90px;
-        width:450px;        
-      }
-
 			#webgl {
 				color: #fff;
 				height: 100%;
@@ -153,14 +143,10 @@
 				height:15px;
 				width:30px;
 			}
-			.ui-state-default {
-				height:15px;
-				width:50px;
-			}
 
 			.ui-slider .ui-slider-handle {
 			    cursor: default;
-			    height: 1.2em;
+			    height: 1.8em;
 			    position: absolute;
 			    width: 0.6em;
 			    z-index: 2;
@@ -185,144 +171,164 @@
 		<div id="webgl">
     <div id="virtual_joystick">
     </div>
-    <div id="info">
-      <font size="4">Simulation Quadcopter by Flamenco - v0.3 (Exp)</font></br>
-      </br>
-      
-      DESCRIPTION:</br>
-      - Simulateur de Quadcopter - Controlleur PID naïf</br>
-    </br>
-
-      PRE-REQUIS:</br>
-      - Affichage webgl, nécessite navigateur web récent (Chrome pour les meilleurs performances)</br>
-      - Ne marche pas sur tablettes iOS, marche peut-être sur tablettes Android..</br>
-      - Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js">VirtualJoystick.js</a></br>
-      </br>
-      FONCTIONS:</br>
-      <font color="red">- Controle Gazs: clic souris gauche au centre de l'écran + glissé vertical</br>
-      - Controle Roulis: clic souris gauche au centre de l'écran + glissé horizontal</br>
-      - Controle Tangage: Touches clavier Z,S</br>
-      - Controle Lacet: Touches clavier Q,D</br></font>
-      - Slider P permet d'ajuster le facteur "Proportionnel" des controlleurs PID</br>
-      - Slider I permet d'ajuster le facteur "Intégral" des controlleurs PID</br>
-      - Slider D permet d'ajuster le facteur "Dérivé" des controlleurs PID</br>
-      - Slider Wind permet d'ajuster la force du vent latéral </br>
-      - Slider Noise permet d'ajuster l'amplitude d'une perturbation aléatoire</br>
-      </br>
-      Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
-      </br></br></br>
-    </div>
-
   			<div id="ui">
-  				<TABLE BORDER="0"> 
-  				  <CAPTION></CAPTION> 
-            <TR>
-            </TR>
+          <div id="accordion">
 
-  				  <TR> 
-  					  <TH> 	
-  					 	<div class="ui-state-default ui-corner-all ui-helper-clearfix">P</div>
-  					 </TH> 
-  					 <TH> 					
-  					 	<div id="ui-sliderP" class="slider"></div>
-  					 </TH> 
-  					 <TH> 					
-  					 	<div id="ui-txtP" class="text"></div>
-  					 </TH> 
-  				  </TR> 
+           <h3>Description</h3>
+            <div id="info">
+                  Implémentation simple d'un simulateur 3D interactif de Quadcopter, basé sur technologies web.</br>
+                  </br>
+                  PRE-REQUIS:</br>
+                  - Affichage utilisant le WebGl, nécessite un navigateur web récent (Chrome préféré)</br>
+                  - OS: PC, Mac, Linux </br>
+                  - Safari nécessite l'activation explicite du WebGl (option dans le menu Developpeur).
+                  </br>        
+                </br>
+                  Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
+          
+            </div>
 
-  				  <TR> 
-  					  <TH> 	
-  					 	<div class="ui-state-default ui-corner-all ui-helper-clearfix">I</div>
-  					 </TH> 
-  					 <TH> 					
-  					 	<div id="ui-sliderI" class="slider"></div>
-  					 </TH> 
-  					 <TH> 					
-  					 	<div id="ui-txtI" class="text"></div>
-  					 </TH> 
-  				  </TR> 
 
-  				  <TR> 
-  					  <TH> 	
-  					 	<div class="ui-state-default ui-corner-all ui-helper-clearfix">D</div>
-  					 </TH> 
-  					 <TH> 					
-  					 	<div id="ui-sliderD" class="slider"></div>
-  					 </TH> 
-  					 <TH> 					
-  					 	<div id="ui-txtD" class="text"></div>
-  					 </TH> 
-  				  </TR> 
+           <h3>Paramètres de Pilotage</h3>
+            <div id="info">
+                  - Controle des Gas: clic gauche souris au centre de l'écran + glissé vertical</br>
+                  - Controle du Roulis: clic gauche souris au centre de l'écran + glissé horizontal</br>
+                  - Controle du Tangage: Touches clavier Z,S</br>
+                  - Controle du Lacet: Touches clavier Q,D</br>
+            </div>
 
-            <TR>
-            </TR>
-            <TR>
-            </TR>
-            <TR>
-            </TR>
+            <h4>Paramètres Controlleurs PID</h4>
+            <div>
+              <p>
+                Paramètres communs aux controlleurs Roulis, Tanguage et Lacet.
+              </p>
+              <TABLE BORDER="0"> 
+                <CAPTION></CAPTION> 
+                <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">P</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderP" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtP" class="text"></div>
+                 </TH> 
+                </TR> 
 
-            <TR> 
-              <TH>  
-              <div class="ui-state-default ui-corner-all ui-helper-clearfix">Wind</div>
-             </TH> 
-             <TH>           
-              <div id="ui-sliderWind" class="slider"></div>
-             </TH> 
-             <TH>           
-              <div id="ui-txtWind" class="text"></div>
-             </TH> 
-            </TR> 
+                <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">I</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderI" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtI" class="text"></div>
+                 </TH> 
+                </TR> 
 
-           <TR> 
-              <TH>  
-              <div class="ui-state-default ui-corner-all ui-helper-clearfix">Noise</div>
-             </TH> 
-             <TH>           
-              <div id="ui-sliderNoise" class="slider"></div>
-             </TH> 
-             <TH>           
-              <div id="ui-txtNoise" class="text"></div>
-             </TH> 
-            </TR> 
-
-            <TR>
-            </TR>
-            <TR>
-            </TR>
-
-            <TR>
-            </TR>
-            <TR>
-            </TR>
-            <TR>
-            </TR>
-
-           <TR> 
-              <TH>  
-              <div class="ui-state-default ui-corner-all ui-helper-clearfix">FPS</div>
-             </TH> 
-             <TH>           
-              <div id="ui-sliderFrameRate" class="slider"></div>
-             </TH> 
-             <TH>           
-              <div id="ui-txtFrameRate" class="text"></div>
-             </TH> 
-            </TR> 
+                <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">D</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderD" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtD" class="text"></div>
+                 </TH> 
+                </TR> 
+              </TABLE>
+              <p>
+                Les graphes affichent les valeurs du controleur Roulis:
+              </p>
+              <div id="chart">
+                <h4 id="output-text">OUTPUT COMMAND</h4>
+                <canvas id="chartOutput" class="chart" width="180px" height="70px"></canvas>
+                <h4 id="error-text"></h4>
+                <canvas id="chartError" class="chart" width="180px" height="70px">test</canvas>
+                <h4 id="integral-text"></h4>
+                <canvas id="chartIntegral" class="chart" width="180px" height="70px"></canvas>
+                <h4 id="derivative-text"></h4>
+                <canvas id="chartDerivative" class="chart" width="180px" height="70px"></canvas>
+              </div>
+            </div>
 
 
 
-  				</TABLE>
-    </div>
-    <div id="chart">
-      <h4 id="output-text">OUTPUT COMMAND</h4>
-      <canvas id="chartOutput" class="chart" width="800px" height="100px"></canvas>
-      <h4 id="error-text"></h4>
-      <canvas id="chartError" class="chart" width="800px" height="100px">test</canvas>
-      <h4 id="integral-text"></h4>
-      <canvas id="chartIntegral" class="chart" width="800px" height="100px"></canvas>
-      <h4 id="derivative-text"></h4>
-      <canvas id="chartDerivative" class="chart" width="800px" height="100px"></canvas>
+            <h3>Réglages Perturbations Ext.</h3>
+            <div>
+             <TABLE BORDER="0"> 
+                <CAPTION></CAPTION> 
+                <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Wind</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderWind" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtWind" class="text"></div>
+                 </TH> 
+                </TR> 
+
+               <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Noise</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderNoise" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtNoise" class="text"></div>
+                 </TH> 
+                </TR> 
+
+              </TABLE>
+            </div>
+
+            <h3>Geolocalisation</h3>
+            <div>
+              <p>
+              </p>
+           </div>
+
+
+            <h3>Paramètres "Système"</h3>
+            <div>
+              <p>
+                Temps entre deux raffraichissements graphiques (en ms):
+              </p>
+              <TABLE BORDER="0"> 
+                <CAPTION></CAPTION> 
+               <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">FPS</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderFrameRate" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtFrameRate" class="text"></div>
+                 </TH> 
+                </TR> 
+              </TABLE>
+           </div>
+
+            <h3>Crédits</h3>
+            <div>
+              <p>
+                Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js">VirtualJoystick.js</a></br>
+                </br>
+                Développé par:</br>
+                Arnaud Muthelet</br>
+                (amuthelet at gmail)</br>
+                Mai 2013</br>
+ 
+              </p>
+           </div>
+      </div>
     </div>
     </div>
 
@@ -383,13 +389,13 @@
       }, 100);
       
       function createTimeline() {
-        var chartOutput = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12}});
+        var chartOutput = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:10}});
         chartOutput.addTimeSeries(output, { strokeStyle: 'rgba(220, 220, 220, 4)', lineWidth: 2 });
-        var chartError = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12},maxValue:1,minValue:-1});
+        var chartError = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:10},maxValue:1,minValue:-1});
         chartError.addTimeSeries(error, { strokeStyle: 'rgba(220, 0, 0, 1)', lineWidth: 2 });
-        var chartIntegral = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12},maxValue:0.2,minValue:-0.2});
+        var chartIntegral = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:10},maxValue:0.2,minValue:-0.2});
         chartIntegral.addTimeSeries(integral, { strokeStyle: 'rgba(0, 220, 0, 1)', lineWidth: 2 });
-        var chartDerivative = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:12},maxValue:20,minValue:-20});
+        var chartDerivative = new SmoothieChart({labels:{fillStyle:'rgba(255,255,255,1.0)',fontSize:10},maxValue:20,minValue:-20});
         chartDerivative.addTimeSeries(derivative, { strokeStyle: 'rgba(0, 0, 220, 1)', lineWidth: 2 });
         chartOutput.streamTo(document.getElementById("chartOutput"), 100);
         chartError.streamTo(document.getElementById("chartError"), 100);
