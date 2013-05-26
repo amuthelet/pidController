@@ -310,7 +310,8 @@ function init() {
 */
 	stats = new Stats();
 	stats.domElement.style.position = 'absolute';
-	stats.domElement.style.bottom = '0px';
+	stats.domElement.style.bottom = '30px';
+	stats.domElement.style.right = '0px';
 	container.appendChild( stats.domElement );
 
 	win.addEventListener( 'resize', onwinResize, false );
@@ -374,16 +375,16 @@ function render() {
 	previousTime = currentTime;
 	perSecond = deltaTime * 0.01;
 
-	var noise = (Math.cos( deltaTime*0.001) * Math.random()*0.1 * $( "#ui-sliderNoise" ).slider("option", "value"));
+	var noise = (Math.cos( currentTime * 0.000000000001) * $( "#ui-sliderNoise" ).slider("option", "value"));
 	var wind = ($( "#ui-sliderWind" ).slider("option", "value"));
 
-	joystick.diffX = 0.009;
+	joystick.diffX = 0.02;
 	joystick.diffY = 0.004;
 
 	//////////// ROTATION ///////////////
 	// Tilt
 	var targetTilt = $( "#ui-sliderRoll" ).slider("option", "value");
-	controlerTilt.Execute(currentTilt, radioTilt*perSecond, perSecond);
+	controlerTilt.Execute(currentTilt, radioTilt, perSecond);
 	var rotationAngleTilt = controlerTilt.outputCommand * 0.02 * perSecond + noise ;
 
 	var root_axisX = new THREE.Vector3( 1, 0, 0);
@@ -749,14 +750,14 @@ function onDocumentMouseUp( event ) {
 }
 
 function increaseTilt() {
-	radioTilt += 0.2; 
+	radioTilt += 0.04; 
 	radioTiltTouched = true;
 	isIncreasingTilt = true;
 }
 
 function decreaseTilt() {
 
-	radioTilt += -0.2; 
+	radioTilt += -0.04; 
 	radioTiltTouched = true;
 	isDecreasingTilt = true;
 }
