@@ -350,7 +350,7 @@ var currentTime = new Date().getTime();
 
 function animate() {
 
-//	requestAnimationFrame( animate );
+	requestAnimationFrame( animate );
 	if ( t > 1 ) t = 0;
 
 	controls.update();

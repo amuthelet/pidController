@@ -11,6 +11,7 @@
 
   		<script>
   			$(function() {
+          var manualFPS = false;
           $("#accordion").accordion({ heightStyle: "content", collapsible: true });
 
     			$( "#ui-sliderRoll" ).slider({min:-1.0, max:1.0, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}});
@@ -22,7 +23,9 @@
           $( "#ui-sliderWind" ).slider({min:-0.5, max:0.5, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtWind").html(ui.value); return;}, create: function(event, ui){$("#ui-txtWind").html("0.0"); return;}});
           $( "#ui-sliderNoise" ).slider({min:-1, max:1, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.005"); return;}});
           $( "#ui-sliderSpeed" ).slider({min:-1.0, max:1.0, step:0.05, value:0.0, slide: function(event, ui){$("#ui-txtSpeed").html(ui.value); return;}, create: function(event, ui){$("#ui-txtSpeed").html("0.0"); return;}});
-          $( "#ui-sliderFrameRate" ).slider({min:10, max:60, step:1.0, value:25.0, slide: function(event, ui){$("#ui-txtFrameRate").html(ui.value); return;}, create: function(event, ui){$("#ui-txtFrameRate").html("25.0"); return;}});
+          $( "#ui-sliderFrameRate" ).slider({min:10, max:60, step:1.0, value:25.0, slide: function(event, ui){$("#ui-txtFrameRate").html(ui.value); manualFPS = true; return;}, create: function(event, ui){$("#ui-txtFrameRate").html("25.0"); return;}});
+
+          $( "#radio" ).buttonset();
 
           $(document).keypress(function(event) {
             if (event.which == 113) {
@@ -71,7 +74,6 @@
             animate();
             interval($( "#ui-sliderFrameRate" ).slider("option", "value"));}
           , counter);}
-      interval(200);
 
         });
   		</script>
@@ -300,6 +302,9 @@
               <p>
                 Temps entre deux raffraichissements graphiques (en ms):
               </p>
+                <div id="radio">
+                  <input type="radio" id="radio1" name="radio" /><label for="radio1">Mode Manuel</label>
+                </div>
               <TABLE BORDER="0"> 
                 <CAPTION></CAPTION> 
                <TR> 
