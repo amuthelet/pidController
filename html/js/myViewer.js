@@ -1,3 +1,14 @@
+/* TODO
+ - Gestion du frame rate
+ - Refonte UI
+ - Redesign code
+ - Gestion gamepad
+ - Gestion Tablette pour commande
+ - Intégration Google Street View
+ - Lecture / playback log MK
+ - 
+
+*/
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 var container, stats;
@@ -52,6 +63,8 @@ var isIncreasingTilt = false;
 var isDecreasingTilt = false;
 var isIncreasingYaw = false;
 var isDecreasingYaw = false;
+
+var perSecond = 0.001;
 
 var root;
 var targetQuat = new THREE.Quaternion();
@@ -295,11 +308,11 @@ function init() {
 		texture2
 	);
 */
-/*	stats = new Stats();
+	stats = new Stats();
 	stats.domElement.style.position = 'absolute';
-	stats.domElement.style.top = '0px';
+	stats.domElement.style.bottom = '0px';
 	container.appendChild( stats.domElement );
-*/
+
 	win.addEventListener( 'resize', onwinResize, false );
 
 	renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -331,16 +344,17 @@ function onwinResize() {
 
 var t = 0;
 var clock = new THREE.Clock();
+var previousTime = new Date().getTime();
+var currentTime = new Date().getTime();
 
 function animate() {
 
-	var delta = clock.getDelta();
-	requestAnimationFrame( animate );
+//	requestAnimationFrame( animate );
 	if ( t > 1 ) t = 0;
 
 	controls.update();
 	render();
-//	stats.update();
+	stats.update();
 }
 
 function radioControl_init()
@@ -355,110 +369,95 @@ function radioControl_update()
 var counter = 0;
 function render() {
 
-	var timer = Date.now() * 0.0005;
-	{
-		var perSecond = 1; // clock.getDelta() * 50000.0;
+	currentTime = new Date().getTime();
+	var deltaTime = currentTime - previousTime;
+	previousTime = currentTime;
+	perSecond = deltaTime * 0.01;
 
-		var noise = (Math.cos( clock.elapsedTime*2.0) * 0.1 * Math.random() * $( "#ui-sliderNoise" ).slider("option", "value")) * perSecond;
-		var wind = ($( "#ui-sliderWind" ).slider("option", "value")) * perSecond;
+	var noise = (Math.cos( deltaTime*0.001) * Math.random()*0.1 * $( "#ui-sliderNoise" ).slider("option", "value"));
+	var wind = ($( "#ui-sliderWind" ).slider("option", "value"));
 
-		var angleLimit = 1.6;
+	joystick.diffX = 0.009;
+	joystick.diffY = 0.004;
 
-		//////////// ROTATION ///////////////
-		// Tilt
-		var targetTilt = $( "#ui-sliderRoll" ).slider("option", "value");
-		controlerTilt.Execute(currentTilt, radioTilt, clock.getDelta());
-		var rotationAngleTilt = controlerTilt.outputCommand * 0.0007 + noise ;
-/*		if( ((currentTilt + rotationAngleTilt) > angleLimit) || ((currentTilt + rotationAngleTilt) < -angleLimit) )
-		{
-			rotationAngleTilt = 0.0;
-			tiltLimit = true;
-		}
-		else 
-			tiltLimit = false;
-*/
-		var root_axisX = new THREE.Vector3( 1, 0, 0);
-		var quaternionX = new THREE.Quaternion();
-		quaternionX.setFromAxisAngle( root_axisX, rotationAngleTilt );
-		root.quaternion.multiply(quaternionX);
-		currentTilt += rotationAngleTilt;
+	//////////// ROTATION ///////////////
+	// Tilt
+	var targetTilt = $( "#ui-sliderRoll" ).slider("option", "value");
+	controlerTilt.Execute(currentTilt, radioTilt*perSecond, perSecond);
+	var rotationAngleTilt = controlerTilt.outputCommand * 0.02 * perSecond + noise ;
 
-		// Yaw
-		controlerYaw.Execute(currentYaw, radioYaw, clock.getDelta());
-		var rotationAngleYaw = controlerYaw.outputCommand * 0.0007 + noise;
+	var root_axisX = new THREE.Vector3( 1, 0, 0);
+	var quaternionX = new THREE.Quaternion();
+	quaternionX.setFromAxisAngle( root_axisX, rotationAngleTilt );
+	root.quaternion.multiply(quaternionX);
+	currentTilt += rotationAngleTilt;
+
+	// Yaw
+	controlerYaw.Execute(currentYaw, radioYaw, perSecond);
+	var rotationAngleYaw = controlerYaw.outputCommand * 0.02 * perSecond + noise;
+
+	var root_axisY = new THREE.Vector3( 0, 1, 0);
+	var quaternionY = new THREE.Quaternion();
+	quaternionY.setFromAxisAngle( root_axisY, rotationAngleYaw );
+	root.quaternion.multiply(quaternionY);
+	currentYaw += rotationAngleYaw;
+
+	// Roll
+	var targetRoll = $( "#ui-sliderRoll" ).slider("option", "value");
+	controlerRoll.Execute(currentRoll, joystick.deltaX()*joystick.diffX, perSecond);
+	var rotationAngleRoll = (controlerRoll.outputCommand * 0.02 * perSecond) + wind + noise;
+
+	var root_axisZ = new THREE.Vector3( 0, 0, 1);
+	var quaternionZ = new THREE.Quaternion();
+	quaternionZ.setFromAxisAngle( root_axisZ, rotationAngleRoll );
+	root.quaternion.multiply(quaternionZ);
+	currentRoll += rotationAngleRoll;
+
+	/////////////// Position ////////////
+	var currentPosition = root.position.clone();
+	var newPosition;
+
+	var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
+	var allForces = new THREE.Vector3( 0, 0, 0 );
+
+	// Weight
+	var weightForceDiff = weightForce.clone();
+	weightForceDiff.multiplyScalar( 0.02 );
+	allForces.add( weightForceDiff );
+
+	// MotorForce
+	motorForce = root_axisY.clone(); 
+	motorForce.applyQuaternion(root.quaternion);
+	radioThrottle = -joystick.deltaY()*joystick.diffY;
+
+	if( radioThrottle < 0.0 )
+			radioThrottle = 0.0;
+
+	allForces.add( motorForce.multiplyScalar( radioThrottle ));
+
+	// Update pos
+	newPosition = currentPosition.clone();
+	newPosition.add(allForces);
+
+	if( newPosition.y < -1.0)
+		newPosition.y = -1.0;
 	
-		var root_axisY = new THREE.Vector3( 0, 1, 0);
-		var quaternionY = new THREE.Quaternion();
-		quaternionY.setFromAxisAngle( root_axisY, rotationAngleYaw );
-		root.quaternion.multiply(quaternionY);
-		currentYaw += rotationAngleYaw;
+	root.position = newPosition;
 
-		// Roll
-		var targetRoll = $( "#ui-sliderRoll" ).slider("option", "value");
-		controlerRoll.Execute(currentRoll, targetRoll, clock.getDelta());
-		var rotationAngleRoll = (controlerRoll.outputCommand * 0.0007) + wind + noise + (joystick.deltaX() / 500.0)*perSecond;
-/*		if( ((currentRoll + rotationAngleRoll) > angleLimit) || ((currentRoll + rotationAngleTilt) < -angleLimit))
-		{
-			rotationAngleRoll = 0.0;
-			rollLimit = true;
-		}
-		else
-			rollLimit = false;
-*/		
-		var root_axisZ = new THREE.Vector3( 0, 0, 1);
-		var quaternionZ = new THREE.Quaternion();
-		quaternionZ.setFromAxisAngle( root_axisZ, rotationAngleRoll );
-		root.quaternion.multiply(quaternionZ);
-		currentRoll += rotationAngleRoll;
+	cameraLookAt.lookAt(newPosition);
+	pointLight01.position = newPosition.clone().add(new THREE.Vector3(-6,6,-2));
+	pointLight02.position = newPosition.clone().add(new THREE.Vector3(6,1,-2));
+	pointLight03.position = newPosition.clone().add(new THREE.Vector3(0,2,6));
+	pointLight01.target.position = newPosition.clone();
+	pointLight02.target.position = newPosition.clone();
+	pointLight03.target.position = newPosition.clone();
 
-		/////////////// Position ////////////
-		var currentPosition = root.position.clone();
-		var newPosition;
-
-		var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
-		var allForces = new THREE.Vector3( 0, 0, 0 );
-
-		// Weight
-		var weightForceDiff = weightForce.clone();
-		weightForceDiff.multiplyScalar( 0.02 );
-		allForces.add( weightForceDiff );
-
-		// MotorForce
-		motorForce = root_axisY.clone(); 
-		motorForce.applyQuaternion(root.quaternion);
-		radioThrottle = -joystick.deltaY() * 0.005;
-
-		if( radioThrottle < 0.0 )
-				radioThrottle = 0.0;
-
-		allForces.add( motorForce.multiplyScalar( radioThrottle ));
-
-		// Update pos
-		newPosition = currentPosition.clone();
-		newPosition.add(allForces);
-
-		if( newPosition.y < -1.0)
-			newPosition.y = -1.0;
-		
-		root.position = newPosition;
-
-		cameraLookAt.lookAt(newPosition);
-		pointLight01.position = newPosition.clone().add(new THREE.Vector3(-6,6,-2));
-		pointLight02.position = newPosition.clone().add(new THREE.Vector3(6,1,-2));
-		pointLight03.position = newPosition.clone().add(new THREE.Vector3(0,2,6));
-		pointLight01.target.position = newPosition.clone();
-		pointLight02.target.position = newPosition.clone();
-		pointLight03.target.position = newPosition.clone();
-
-		// Visual rep of forces
-	//			update_line(weightForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), weightForce);
-	//			update_line(motorForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), motorForce);
-
-		//renderer.render(scene, camera);
-	}
+	// Visual rep of forces
+//			update_line(weightForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), weightForce);
+//			update_line(motorForceRep, new THREE.Vector3( newPosition.x, newPosition.y, newPosition.z ), motorForce);
 
 	renderer.clear();
-	processorChain.render(delta);
+	processorChain.render(perSecond);
 }
 
 function createFlare(scene, position, color)
@@ -750,28 +749,28 @@ function onDocumentMouseUp( event ) {
 }
 
 function increaseTilt() {
-	radioTilt += 0.08; 
+	radioTilt += 0.2; 
 	radioTiltTouched = true;
 	isIncreasingTilt = true;
 }
 
 function decreaseTilt() {
 
-	radioTilt += -0.08; 
+	radioTilt += -0.2; 
 	radioTiltTouched = true;
 	isDecreasingTilt = true;
 }
 
 function increaseYaw() {
 
-	radioYaw += 0.08; 
+	radioYaw += 0.05; 
 	radioYawTouched = true;
 	isIncreasingYaw = true;
 }
 
 function decreaseYaw() {
 
-	radioYaw += -0.08; 
+	radioYaw += -0.05; 
 	radioYawTouched = true;
 	isDecreasingYaw = true;
 }

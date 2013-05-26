@@ -14,12 +14,13 @@
     			$( "#ui-sliderRoll" ).slider({min:-1.0, max:1.0, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}});
     			$( "#ui-sliderTilt" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtTilt").html(ui.value); return;}});
     			$( "#ui-sliderYaw" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtYaw").html(ui.value); return;}});
-    			$( "#ui-sliderP" ).slider({min:0.0, max:500.0, step:0.5, value:80.0, slide: function(event, ui){$("#ui-txtP").html(ui.value); return;}, create: function(event, ui){$("#ui-txtP").html("80.0"); console.log("hello"); return;}});
-    			$( "#ui-sliderI" ).slider({min:0.0, max:3500.0, step:0.1, value:700.0, slide: function(event, ui){$("#ui-txtI").html(ui.value); return;}, create: function(event, ui){$("#ui-txtI").html("700.0"); return;}});
+    			$( "#ui-sliderP" ).slider({min:0.0, max:200.0, step:0.5, value:90.0, slide: function(event, ui){$("#ui-txtP").html(ui.value); return;}, create: function(event, ui){$("#ui-txtP").html("90.0"); console.log("hello"); return;}});
+    			$( "#ui-sliderI" ).slider({min:0.0, max:300.0, step:0.1, value:50.0, slide: function(event, ui){$("#ui-txtI").html(ui.value); return;}, create: function(event, ui){$("#ui-txtI").html("50.0"); return;}});
           $( "#ui-sliderD" ).slider({min:0.0, max:50.0, step:0.1, value:0.0, slide: function(event, ui){$("#ui-txtD").html(ui.value); return;}, create: function(event, ui){$("#ui-txtD").html("0.0"); return;}});
-          $( "#ui-sliderWind" ).slider({min:-0.05, max:0.05, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtWind").html(ui.value); return;}, create: function(event, ui){$("#ui-txtWind").html("0.0"); return;}});
-          $( "#ui-sliderNoise" ).slider({min:-0.01, max:0.01, step:0.001, value:0.005, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.005"); return;}});
+          $( "#ui-sliderWind" ).slider({min:-0.5, max:0.5, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtWind").html(ui.value); return;}, create: function(event, ui){$("#ui-txtWind").html("0.0"); return;}});
+          $( "#ui-sliderNoise" ).slider({min:-1, max:1, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.005"); return;}});
           $( "#ui-sliderSpeed" ).slider({min:-1.0, max:1.0, step:0.05, value:0.0, slide: function(event, ui){$("#ui-txtSpeed").html(ui.value); return;}, create: function(event, ui){$("#ui-txtSpeed").html("0.0"); return;}});
+          $( "#ui-sliderFrameRate" ).slider({min:10, max:60, step:1.0, value:25.0, slide: function(event, ui){$("#ui-txtFrameRate").html(ui.value); return;}, create: function(event, ui){$("#ui-txtFrameRate").html("25.0"); return;}});
 
           $(document).keypress(function(event) {
             if (event.which == 113) {
@@ -62,6 +63,13 @@
             radioYaw = radioYaw;
       }, 100);
 
+      
+      var interval = function(counter) {
+          setTimeout(function(){
+            animate();
+            interval($( "#ui-sliderFrameRate" ).slider("option", "value"));}
+          , counter);}
+      interval(200);
 
         });
   		</script>
@@ -301,6 +309,20 @@
               <div id="ui-txtSpeed" class="text"></div>
              </TH> 
             </TR> 
+
+           <TR> 
+              <TH>  
+              <div class="ui-state-default ui-corner-all ui-helper-clearfix">FrameRate</div>
+             </TH> 
+             <TH>           
+              <div id="ui-sliderFrameRate" class="slider"></div>
+             </TH> 
+             <TH>           
+              <div id="ui-txtFrameRate" class="text"></div>
+             </TH> 
+            </TR> 
+
+
 
   				</TABLE>
     </div>
