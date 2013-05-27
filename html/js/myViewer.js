@@ -350,7 +350,10 @@ var currentTime = new Date().getTime();
 
 function animate() {
 
-	requestAnimationFrame( animate );
+	setTimeout(function(){
+	    animate();
+	}, $( "#ui-sliderFrameRate" ).slider("option", "value"));
+
 	if ( t > 1 ) t = 0;
 
 	controls.update();
