@@ -721,6 +721,52 @@ function update_line(line, startVertex, endVertex)
 	line.verticesNeedUpdate = true;
 }
 
+<<<<<<< HEAD
+=======
+function render() {
+
+	var timer = Date.now() * 0.0005;
+
+	scene.traverse(function (child) 
+	{
+		if (child.name == "ROOT") 
+		{
+			// Orientation
+			var q = child.quaternion;
+			var v = new THREE.Vector3();
+			v.setEulerFromQuaternion(q);
+			var targetVal = $( "#ui-sliderRoll" ).slider("option", "value");
+			myPID.Execute(v.z, targetVal, clock.getDelta());
+			var noise = Math.random() * $( "#ui-sliderNoise" ).slider("option", "value");
+			var wind = $( "#ui-sliderWind" ).slider("option", "value");
+			v.z = v.z + (myPID.outputCommand * 0.0007) + wind + noise;
+			myPID.currentValue = v.z;
+			q = (new THREE.Quaternion).setFromEuler(v);
+			child.quaternion = q;
+
+			// Position
+			var weight = new THREE.Vector3();
+			weight.set(0.0, -1.0 * 2.5 * 9.81*0.00001, 0.0);
+			var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
+
+			var child_up_point_local = new THREE.Vector3();
+			child_up_point_local.set(0.0, 1.0, 0.0);
+			var child_up_point_world = child.matrixWorld.multiplyVector3(child_up_point_local);
+			var child_up = child_up_point_world.subSelf(child.position).normalize();
+
+			var newPosition = new THREE.Vector3();
+			newPosition.add(child.position, weight); // + speed*child.up;
+			newPosition.add(newPosition, child_up.multiplyScalar(speed));
+//			child.position = newPosition;
+		}
+	});
+
+	controls.update();
+	//renderer.render(scene, camera);
+	renderer.clear();
+	processorChain.render(delta);
+}
+>>>>>>> master
 
 function onDocumentMouseMove( event ) {
 
