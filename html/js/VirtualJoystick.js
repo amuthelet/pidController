@@ -2,12 +2,12 @@ var VirtualJoystick	= function(opts)
 {
 	opts			= opts			|| {};
 	this._container		= opts.container	|| document.body;
-	this._strokeStyle	= opts.strokeStyle	|| 'white'; // modif
+	this._strokeStyle	= opts.strokeStyle	|| 'cyan';
 	this._stickEl		= opts.stickElement	|| this._buildJoystickStick();
 	this._baseEl		= opts.baseElement	|| this._buildJoystickBase();
 	this._mouseSupport	= opts.mouseSupport !== undefined ? opts.mouseSupport : false;
 
-	this._container.style.position	= "absolute";
+	this._container.style.position	= "relative";
 
 	this._container.appendChild(this._baseEl);
 	this._baseEl.style.position	= "absolute"

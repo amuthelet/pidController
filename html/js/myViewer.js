@@ -73,6 +73,56 @@ var pointLight01, pointLight02, pointLight03;
 
 var joystick;
 
+//Browser Support Code
+function CreateAjaxRequest()
+{
+    var ajaxRequest;  // The variable that makes Ajax possible!
+    try{
+        // Opera 8.0+, Firefox, Safari
+        ajaxRequest = new XMLHttpRequest();
+    } catch (e){
+        // Internet Explorer Browsers
+        try{
+            ajaxRequest = new ActiveXObject("Msxml2.XMLHTTP");
+        } catch (e) {
+            try{
+                ajaxRequest = new ActiveXObject("Microsoft.XMLHTTP");
+            } catch (e){
+                // Something went wrong
+                alert("Your browser broke!");
+                return false;
+            }
+        }
+    }
+    return ajaxRequest;
+}
+
+// Command
+function GetVirtualJoystickValue(){
+    ajaxRequest = CreateAjaxRequest();
+    // Create a function that will receive data sent from the server
+    ajaxRequest.onreadystatechange = function(){
+        if(ajaxRequest.readyState == 4)
+        {
+        	var params = ajaxRequest.responseText.split(',');
+        	if( params[0] != 0.0 )
+        		radioYaw  -= params[0] / 2000.0; 
+        	if( params[1] != 0.0 )
+	        	radioTilt = -params[1] / 40.0;
+        	if( params[2] != 0.0 )
+    	    	radioRoll = params[2] / 40.0;
+        	if( params[3] != 0.0 )
+        		radioThrottle = -params[3] / 100.0;
+        	console.log(ajaxRequest.responseText);
+            return ajaxRequest.responseText;        	
+        }
+    }
+ 
+    ajaxRequest.open("GET", "/get_joystick_value", true);
+    ajaxRequest.send(null);
+}
+
+
 function launchWebGL()
 {
 	log("Loading models ..."+width+" "+height);
@@ -349,12 +399,11 @@ var previousTime = new Date().getTime();
 var currentTime = new Date().getTime();
 
 function animate() {
-
 	setTimeout(function(){
 	    animate();
 	}, $( "#ui-sliderFrameRate" ).slider("option", "value"));
 
-	if ( t > 1 ) t = 0;
+	if ( t > 1 )
 
 	controls.update();
 	render();
@@ -408,7 +457,8 @@ function render() {
 
 	// Roll
 	var targetRoll = $( "#ui-sliderRoll" ).slider("option", "value");
-	controlerRoll.Execute(currentRoll, joystick.deltaX()*joystick.diffX, perSecond);
+	radioRoll = joystick.deltaX()*joystick.diffX;
+	controlerRoll.Execute(currentRoll, radioRoll, perSecond);
 	var rotationAngleRoll = (controlerRoll.outputCommand * 0.02 * perSecond) + wind + noise;
 
 	var root_axisZ = new THREE.Vector3( 0, 0, 1);
@@ -432,7 +482,7 @@ function render() {
 	// MotorForce
 	motorForce = root_axisY.clone(); 
 	motorForce.applyQuaternion(root.quaternion);
-	radioThrottle = -joystick.deltaY()*joystick.diffY;
+	//radioThrottle = -joystick.deltaY()*joystick.diffY;
 
 	if( radioThrottle < 0.0 )
 			radioThrottle = 0.0;
@@ -720,53 +770,6 @@ function update_line(line, startVertex, endVertex)
 	line.vertices[1] = endVertex.clone();
 	line.verticesNeedUpdate = true;
 }
-
-<<<<<<< HEAD
-=======
-function render() {
-
-	var timer = Date.now() * 0.0005;
-
-	scene.traverse(function (child) 
-	{
-		if (child.name == "ROOT") 
-		{
-			// Orientation
-			var q = child.quaternion;
-			var v = new THREE.Vector3();
-			v.setEulerFromQuaternion(q);
-			var targetVal = $( "#ui-sliderRoll" ).slider("option", "value");
-			myPID.Execute(v.z, targetVal, clock.getDelta());
-			var noise = Math.random() * $( "#ui-sliderNoise" ).slider("option", "value");
-			var wind = $( "#ui-sliderWind" ).slider("option", "value");
-			v.z = v.z + (myPID.outputCommand * 0.0007) + wind + noise;
-			myPID.currentValue = v.z;
-			q = (new THREE.Quaternion).setFromEuler(v);
-			child.quaternion = q;
-
-			// Position
-			var weight = new THREE.Vector3();
-			weight.set(0.0, -1.0 * 2.5 * 9.81*0.00001, 0.0);
-			var speed = $( "#ui-sliderSpeed" ).slider("option", "value");
-
-			var child_up_point_local = new THREE.Vector3();
-			child_up_point_local.set(0.0, 1.0, 0.0);
-			var child_up_point_world = child.matrixWorld.multiplyVector3(child_up_point_local);
-			var child_up = child_up_point_world.subSelf(child.position).normalize();
-
-			var newPosition = new THREE.Vector3();
-			newPosition.add(child.position, weight); // + speed*child.up;
-			newPosition.add(newPosition, child_up.multiplyScalar(speed));
-//			child.position = newPosition;
-		}
-	});
-
-	controls.update();
-	//renderer.render(scene, camera);
-	renderer.clear();
-	processorChain.render(delta);
-}
->>>>>>> master
 
 function onDocumentMouseMove( event ) {
 

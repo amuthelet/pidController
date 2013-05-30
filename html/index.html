@@ -17,13 +17,16 @@
     			$( "#ui-sliderRoll" ).slider({min:-1.0, max:1.0, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}});
     			$( "#ui-sliderTilt" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtTilt").html(ui.value); return;}});
     			$( "#ui-sliderYaw" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtYaw").html(ui.value); return;}});
-    			$( "#ui-sliderP" ).slider({min:0.0, max:200.0, step:0.5, value:90.0, slide: function(event, ui){$("#ui-txtP").html(ui.value); return;}, create: function(event, ui){$("#ui-txtP").html("90.0"); console.log("hello"); return;}});
+    			$( "#ui-sliderP" ).slider({min:0.0, max:200.0, step:0.5, value:50.0, slide: function(event, ui){$("#ui-txtP").html(ui.value); return;}, create: function(event, ui){$("#ui-txtP").html("50.0"); console.log("hello"); return;}});
     			$( "#ui-sliderI" ).slider({min:0.0, max:300.0, step:0.1, value:50.0, slide: function(event, ui){$("#ui-txtI").html(ui.value); return;}, create: function(event, ui){$("#ui-txtI").html("50.0"); return;}});
           $( "#ui-sliderD" ).slider({min:0.0, max:50.0, step:0.1, value:0.0, slide: function(event, ui){$("#ui-txtD").html(ui.value); return;}, create: function(event, ui){$("#ui-txtD").html("0.0"); return;}});
           $( "#ui-sliderWind" ).slider({min:-0.5, max:0.5, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtWind").html(ui.value); return;}, create: function(event, ui){$("#ui-txtWind").html("0.0"); return;}});
           $( "#ui-sliderNoise" ).slider({min:-1, max:1, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.005"); return;}});
           $( "#ui-sliderSpeed" ).slider({min:-1.0, max:1.0, step:0.05, value:0.0, slide: function(event, ui){$("#ui-txtSpeed").html(ui.value); return;}, create: function(event, ui){$("#ui-txtSpeed").html("0.0"); return;}});
           $( "#ui-sliderFrameRate" ).slider({min:10, max:60, step:1.0, value:25.0, slide: function(event, ui){$("#ui-txtFrameRate").html(ui.value); manualFPS = true; return;}, create: function(event, ui){$("#ui-txtFrameRate").html("25.0"); return;}});
+          $( "#ui-sliderRateRoll" ).slider({min:0.5, max:2.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRateRoll").html("1.0"); return;}});
+          $( "#ui-sliderRateTilt" ).slider({min:0.5, max:2.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateTilt").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRateTilt").html("1.0"); return;}});
+          $( "#ui-sliderRateYaw" ).slider({min:0.5, max:2.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateYaw").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRateYaw").html("1.0"); return;}});
 
           $( "#radio" ).buttonset();
 
@@ -61,23 +64,22 @@
              }
           }); 
 
-      setInterval(function() {
-        if( (isIncreasingTilt === false) && (isDecreasingTilt === false) )
-            radioTilt = radioTilt;
-        if( (isIncreasingYaw === false) && (isDecreasingYaw === false) )
-            radioYaw = radioYaw;
-      }, 100);
+        setInterval(function() {
+          if( (isIncreasingTilt === false) && (isDecreasingTilt === false) )
+              radioTilt = radioTilt;
+          if( (isIncreasingYaw === false) && (isDecreasingYaw === false) )
+              radioYaw = radioYaw;
+        }, 100);
 
-      
-      var interval = function(counter) {
-          setTimeout(function(){
-            animate();
-            interval($( "#ui-sliderFrameRate" ).slider("option", "value"));}
-          , counter);}
+        setInterval(function() {
+          GetVirtualJoystickValue()
+        }, 50);
+
+
 
         });
-  requestAnimationFrame( animate );
 
+      requestAnimationFrame( animate );
   		</script>
  
 		<style>
@@ -188,17 +190,66 @@
                   - Safari nécessite l'activation explicite du WebGl (option dans le menu Developpeur).
                   </br>        
                 </br>
-                  Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info">mk-fr</a> !!</br>
+                  Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info" target="MK-FR">mk-fr</a> !!</br>
           
             </div>
 
 
            <h3>Paramètres de Pilotage</h3>
             <div id="info">
-                  - Controle des Gas: clic gauche souris au centre de l'écran + glissé vertical</br>
-                  - Controle du Roulis: clic gauche souris au centre de l'écran + glissé horizontal</br>
-                  - Controle du Tangage: Touches clavier Z,S</br>
-                  - Controle du Lacet: Touches clavier Q,D</br>
+            Sensibilité commandes</br>
+            _________________________</br></br>
+             <TABLE BORDER="0"> 
+                <CAPTION></CAPTION> 
+                <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Roll</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderRateRoll" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtRateRoll" class="text"></div>
+                 </TH> 
+                </TR> 
+
+               <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Tilt</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderRateTilt" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtRateTilt" class="text"></div>
+                 </TH> 
+                </TR> 
+
+               <TR> 
+                  <TH>  
+                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Yaw</div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-sliderRateYaw" class="slider"></div>
+                 </TH> 
+                 <TH>           
+                  <div id="ui-txtRateYaw" class="text"></div>
+                 </TH> 
+                </TR> 
+
+              </TABLE></br>
+
+
+            Contrôle clavier / souris</br>
+            _________________________</br></br>
+                  - Gas: clic gauche souris au centre de l'écran + glissé vertical</br>
+                  - Roulis: clic gauche souris au centre de l'écran + glissé horizontal</br>
+                  - Tangage: Touches clavier Z,S</br>
+                  - Lacet: Touches clavier Q,D</br></br>
+            Contrôle tablet multi-touch</br>  
+            _________________________</br></br>
+
+            Necessite le lancement d'un server web local qui gère la comm entre la tablet et le simu. Installer <a href="http://nodejs.org" target="nodejs">nodejs</a>, dezipper <a href="http://amuthelet.free.fr/.pidController/archive.zip" target="Simu Archive">monSimuWeb</a>, taper 'node nodeHTTPServer.js' en ligne de commande dans le repertoire dézippé. Fermer la fenêtre acguel et relancer le simu en local dans un browser sur votre machine (IPaddress:3000/index.html), et l'interface de contrôle sur votre tablet (IPaddress:3000/index_vj.html).
             </div>
 
             <h4>Paramètres Controlleurs PID</h4>
@@ -304,9 +355,6 @@
               <p>
                 Temps entre deux raffraichissements graphiques (en ms):
               </p>
-                <div id="radio">
-                  <input type="radio" id="radio1" name="radio" /><label for="radio1">Mode Manuel</label>
-                </div>
               <TABLE BORDER="0"> 
                 <CAPTION></CAPTION> 
                <TR> 
@@ -326,7 +374,7 @@
             <h3>Crédits</h3>
             <div>
               <p>
-                Utilise: <a href="http://threejs.org">Three.js</a>, <a href="http://jqueryui.com">jQuery UI</a>, <a href="http://smoothiecharts.org">Smoothie Charts</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js">VirtualJoystick.js</a></br>
+                Utilise: <a href="http://threejs.org" target="Three.js">Three.js</a>, <a href="http://jqueryui.com" target="JQuery UI">jQuery UI</a>, <a href="http://smoothiecharts.org" target="Smoothie Charts"> Smoothie Charts</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js" target="VirtualJoystick.js">VirtualJoystick.js</a></br>
                 </br>
                 Développé par:</br>
                 Arnaud Muthelet</br>
