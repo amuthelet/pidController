@@ -56,9 +56,14 @@ var weightForceRep = new THREE.Vector3(0,0,0);
 var motorForce = new THREE.Vector3(0,1.0,0);
 var motorForceRep = new THREE.Vector3(0,0,0);
 
-var radioRoll=0.0, radioTilt=0.0, radioYaw=0.0; radioThrottle=0.0;
+var radioRoll=0.0, radioTilt=0.0, radioYaw=0.0, radioThrottle=0.0;
+var radioRollRate=1.0, radioTiltRate=1.0, radioYawRate=1.0, radioThrottleRate=1.0;
+
 var radioYawTouched = false;
 var radioTiltTouched = false;
+
+var controlMode = 0;
+
 var isIncreasingTilt = false;
 var isDecreasingTilt = false;
 var isIncreasingYaw = false;
@@ -104,16 +109,15 @@ function GetVirtualJoystickValue(){
     ajaxRequest.onreadystatechange = function(){
         if(ajaxRequest.readyState == 4)
         {
-        	var params = ajaxRequest.responseText.split(',');
-        	if( params[0] != 0.0 )
-        		radioYaw  -= params[0] / 2000.0; 
-        	if( params[1] != 0.0 )
-	        	radioTilt = -params[1] / 40.0;
-        	if( params[2] != 0.0 )
-    	    	radioRoll = params[2] / 40.0;
-        	if( params[3] != 0.0 )
-        		radioThrottle = -params[3] / 100.0;
-        	console.log(ajaxRequest.responseText);
+        	if( controlMode == 1 )
+        	{
+	        	var params = ajaxRequest.responseText.split(',');
+	    		radioYaw  -= (params[0] / 1000.0)*radioYawRate; 
+	        	radioTilt = -(params[1] / 80.0)*radioTiltRate;
+		    	radioRoll = (params[2] / 40.0)*radioRollRate;
+	    		radioThrottle = -(params[3] / 100.0)*radioThrottleRate;
+        	}
+
             return ajaxRequest.responseText;        	
         }
     }
@@ -448,7 +452,6 @@ function render() {
 	// Yaw
 	controlerYaw.Execute(currentYaw, radioYaw, perSecond);
 	var rotationAngleYaw = controlerYaw.outputCommand * 0.02 * perSecond + noise;
-
 	var root_axisY = new THREE.Vector3( 0, 1, 0);
 	var quaternionY = new THREE.Quaternion();
 	quaternionY.setFromAxisAngle( root_axisY, rotationAngleYaw );
@@ -457,7 +460,9 @@ function render() {
 
 	// Roll
 	var targetRoll = $( "#ui-sliderRoll" ).slider("option", "value");
-	radioRoll = joystick.deltaX()*joystick.diffX;
+	if( controlMode == 0)
+		radioRoll = joystick.deltaX()*joystick.diffX*radioRollRate;
+	
 	controlerRoll.Execute(currentRoll, radioRoll, perSecond);
 	var rotationAngleRoll = (controlerRoll.outputCommand * 0.02 * perSecond) + wind + noise;
 
@@ -482,7 +487,9 @@ function render() {
 	// MotorForce
 	motorForce = root_axisY.clone(); 
 	motorForce.applyQuaternion(root.quaternion);
-	//radioThrottle = -joystick.deltaY()*joystick.diffY;
+	
+	if( controlMode == 0)
+		radioThrottle = -joystick.deltaY()*joystick.diffY*radioThrottleRate;
 
 	if( radioThrottle < 0.0 )
 			radioThrottle = 0.0;
@@ -801,30 +808,38 @@ function onDocumentMouseDown( event ) {
 function onDocumentMouseUp( event ) {
 }
 
-function increaseTilt() {
-	radioTilt += 0.04; 
-	radioTiltTouched = true;
-	isIncreasingTilt = true;
+function increaseTilt(){
+	if( controlMode == 0)
+	{	
+		radioTilt += 0.04*radioTiltRate; 
+		radioTiltTouched = true;
+		isIncreasingTilt = true;
+	}
 }
 
 function decreaseTilt() {
-
-	radioTilt += -0.04; 
-	radioTiltTouched = true;
-	isDecreasingTilt = true;
+	if( controlMode == 0)
+	{	
+		radioTilt += -0.04*radioTiltRate; 
+		radioTiltTouched = true;
+		isDecreasingTilt = true;
+	}
 }
 
 function increaseYaw() {
-
-	radioYaw += 0.05; 
-	radioYawTouched = true;
-	isIncreasingYaw = true;
+	if( controlMode == 0)
+	{	
+		radioYaw += 0.05*radioYawRate; 
+		radioYawTouched = true;
+		isIncreasingYaw = true;
+	}
 }
 
 function decreaseYaw() {
-
-	radioYaw += -0.05; 
-	radioYawTouched = true;
-	isDecreasingYaw = true;
+	if( controlMode == 0)
+	{	
+		radioYaw += -0.05*radioYawRate; 
+		radioYawTouched = true;
+		isDecreasingYaw = true;
+	}
 }
-

@@ -38,8 +38,9 @@ function getNetworkIP(callback) {
 }
 
 getNetworkIP(function (error, ip) {
-    console.log("Pour lancer le simu, aller ici: "+ip+":3000/index.html");
-    console.log("Pour lancer l'interface de controle multi-touch, aller ici: "+ip+":3000/index_vj.html");
+    console.log("Simulateur: "+ip+":3000/index.html");
+    console.log("Interface de controle deportee: "+ip+":3000/index_control.html");
+
     if (error) {
         console.log('error:', error);
     }

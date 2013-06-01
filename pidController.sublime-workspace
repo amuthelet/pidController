@@ -1,0 +1,567 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"v",
+				"vertical-align"
+			],
+			[
+				"li",
+				"listen()	limit.js"
+			],
+			[
+				"back",
+				"background-color"
+			],
+			[
+				"al",
+				"alignment-baseline:   (property)"
+			],
+			[
+				"padding",
+				"padding-top"
+			],
+			[
+				"mult",
+				"multiplyVector3( vector )	three.js"
+			],
+			[
+				"rotationAng",
+				"rotationAngleRoll"
+			],
+			[
+				"rota",
+				"rotateOnAxis()	three.js"
+			],
+			[
+				"Vector",
+				"Vector4( x, y, z, w )	three.js"
+			],
+			[
+				"is",
+				"isIncreasingTilt"
+			],
+			[
+				"ra",
+				"radioTiltTouched"
+			],
+			[
+				"newPosition",
+				"newPositionScaled"
+			],
+			[
+				"del",
+				"deltaY()	VirtualJoystick.js"
+			],
+			[
+				"multipl",
+				"multiplyScalar( s )	three.js"
+			],
+			[
+				"addS",
+				"addSelf( v )	three.js"
+			],
+			[
+				"wei",
+				"weightForce"
+			],
+			[
+				"app",
+				"applyMatrix( matrix )	three.js"
+			],
+			[
+				"tr",
+				"translateZ( distance )	three.js"
+			],
+			[
+				"mu",
+				"multiplyScalar( s )	three.js"
+			],
+			[
+				"padd",
+				"padding-bottom"
+			],
+			[
+				"marg",
+				"margin-top"
+			],
+			[
+				"paddin",
+				"padding-top"
+			],
+			[
+				"pa",
+				"padding-top"
+			],
+			[
+				"margin",
+				"margin-left"
+			],
+			[
+				"sub",
+				"sub_menu"
+			],
+			[
+				"an",
+				"animate"
+			],
+			[
+				"el",
+				"el_title"
+			],
+			[
+				"vi",
+				"viewportHeight"
+			],
+			[
+				"get",
+				"getElementById  (function)"
+			],
+			[
+				"getE",
+				"getElementsByClassName  (function)"
+			],
+			[
+				"render",
+				"renderToScreen"
+			],
+			[
+				"rendr",
+				"renderTarget2"
+			],
+			[
+				"pr",
+				"processorChain"
+			],
+			[
+				"po",
+				"pointLight03"
+			],
+			[
+				"effec",
+				"effectSepia"
+			],
+			[
+				"matr",
+				"updateProjectionMatrix"
+			],
+			[
+				"in",
+				"innerWidth  (variable)"
+			],
+			[
+				"inn",
+				"innerHeight  (variable)"
+			],
+			[
+				"shad",
+				"shadowMapResolution"
+			],
+			[
+				"ca",
+				"castShadow"
+			],
+			[
+				"C",
+				"color"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 392.0,
+		"selected_items":
+		[
+			[
+				"",
+				"Package Control: Install Package"
+			],
+			[
+				"git co",
+				"Git: Commit"
+			],
+			[
+				"git ad",
+				"Git: Add..."
+			],
+			[
+				"git ch",
+				"Git: Change Branch"
+			],
+			[
+				"git stat",
+				"Git: Status"
+			],
+			[
+				"git com",
+				"Git: Commit"
+			],
+			[
+				"git add",
+				"Git: Add..."
+			],
+			[
+				"git cha",
+				"Git: Change Branch"
+			],
+			[
+				"git sta",
+				"Git: Status"
+			],
+			[
+				"git comm",
+				"Git: Commit"
+			],
+			[
+				"qui",
+				"Git: Quick Commit"
+			],
+			[
+				"in",
+				"Package Control: Install Package"
+			],
+			[
+				"quic",
+				"Git: Quick Commit"
+			],
+			[
+				"chan",
+				"Git: Change Branch"
+			],
+			[
+				"quick",
+				"Git: Quick Commit"
+			],
+			[
+				"git b",
+				"Git: Change Branch"
+			],
+			[
+				"git new",
+				"Git: New Branch"
+			],
+			[
+				"git p",
+				"Git: Push"
+			],
+			[
+				"custo",
+				"Git: Custom Command"
+			],
+			[
+				"git",
+				"Git: Add..."
+			],
+			[
+				"cust",
+				"Git: Custom Command"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"pak",
+				"Package Control: Install Package"
+			],
+			[
+				"packa",
+				"Package Control: Install Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 449.0
+	},
+	"console":
+	{
+		"height": 118.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/virtualjoystick.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/virtualjoystick.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/README.md",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/javascripts.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/pythonHTTPServer.py",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/nodeHTTPServerBase.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/nodeHTTPServerUtils.js",
+		"/Users/amuthelet/nodeHTTPServer.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/http-server.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/nodeHTTPServer.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/myWebServer.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/index_vj.html",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/webserver.py",
+		"/Users/amuthelet/Downloads/Node js/STEPCODE.txt",
+		"/Users/amuthelet/Documents/Mikrokopter/virtualJoystickServer/javascripts.js",
+		"/Users/amuthelet/Documents/Mikrokopter/virtualJoystickServer/webserver.py",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/PIDController.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/myViewer.js",
+		"/Users/amuthelet/Documents/Mikrokopter/virtualJoystickServer/index.html",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/VirtualJoystick.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/Detector.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/models/collada/quadroXL/QuadXL-noCamera.DAE",
+		"/Users/amuthelet/Downloads/mrdoob-three.js-9792a0f/examples/misc_controls_orbit.html",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/build/three.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/build/three.min.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/loaders/ColladaLoader.js",
+		"/Users/amuthelet/Downloads/mrdoob-three.js-9792a0f/examples/js/loaders/ColladaLoader.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/MarchingCubes.js",
+		"/Users/amuthelet/Desktop/todo.txt",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/Cloth.js",
+		"/Users/amuthelet/Downloads/PID_Test001/Form1.cs",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/chart.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/js/smoothie.js",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/test.html",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/index.html",
+		"/Users/amuthelet/Documents/Mikrokopter/pidController/html/models/collada/quadroXL/QuadXL.DAE",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/js/myViewer.js",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/myViewer.html",
+		"/Users/amuthelet/Documents/myWebSite/public_html/index.html",
+		"/Users/amuthelet/Library/Application Support/Sublime Text 2/Packages/Default/Default (OSX).sublime-keymap",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/AnimatedContentMenu/index.html",
+		"/Users/amuthelet/Library/Application Support/Sublime Text 2/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/index2.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/css3d_youtube.html",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/AnimatedContentMenu/css/style.css",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/js/shaders/HueSaturationShader.js",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/js/shaders/BrightnessContrastShader.js",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/js/shaders/BlendShaderCustom.js",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_rtt.html",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/html/js/shaders/HorizontalBlurShader.js",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/js/shaders/FXAAShader.js",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/css3d_panorama.html",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/js/myViewer.js",
+		"/Users/amuthelet/Documents/Mikrokopter/viewer3D/myViewer.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/js/myViewer.js",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/myViewer.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_materials_video.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/canvas_materials_video.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_materials_texture_filters.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_geometry_hierarchy2.html",
+		"/Users/amuthelet/Downloads/mrdoob-three.js-ca224d2/examples/webgl_postprocessing.html",
+		"/Users/amuthelet/Downloads/mrdoob-three.js-ca224d2/examples/webgl_rtt.html",
+		"/Users/amuthelet/Desktop/Idées cadeaux.txt",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_materials_cubemap_balls_refraction.html",
+		"/Users/amuthelet/Downloads/mrdoob-three.js-ca224d2/examples/webgl_materials_cubemap.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_lines_dashed.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/js/shaders/SSAOShader.js",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_postprocessing.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_lensflares.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_loader_obj_mtl.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_multiple_views.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/js/controls/OrbitControls.js",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/README.md",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/editor/index.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/webgl_performance.html",
+		"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples/misc_controls_orbit.html",
+		"/Users/amuthelet/Desktop/haarcascade_frontalface_alt.xml"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+			"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/",
+			"/Users/amuthelet/Documents/Mikrokopter/mrdoob-three.js-ca224d2/examples"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"deltaTime",
+			"console",
+			"delta",
+			"clock",
+			"timer",
+			"root",
+			"viewportWidth",
+			"camera",
+			"multiply: function ( m, n )",
+			"applyMatrix3",
+			" =",
+			"child",
+			"weightForce",
+			"createTexturedPlane",
+			"function createTexturedPlane(scene, position, rotation, scale, texture)\n",
+			"createPlane",
+			"launchWebGL",
+			"init()",
+			"init",
+			"toggleMenuItems",
+			"closeSubMenu",
+			"loadImages",
+			"ItemImages",
+			"loadImages",
+			"find",
+			"replace",
+			"find",
+			"adjustImageSize",
+			"loadPage",
+			"initEventsSubMenu",
+			"init",
+			"id",
+			"400",
+			"window",
+			"container",
+			"$title",
+			"menu",
+			"title",
+			"ac_content",
+			"event",
+			"search",
+			"comment",
+			"lensFlareUpdateCallback",
+			"controls",
+			"rotation",
+			"projector",
+			"Projector",
+			"projector",
+			"objects",
+			"Objects",
+			"objects",
+			"Objects",
+			"objects",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"Mouse",
+			"mouse",
+			"renderBackground",
+			"renderScene",
+			"Mask",
+			"sceneMask",
+			"composer3",
+			"				composer3.render( delta );\n",
+			"container",
+			"traverseHierarchy",
+			"SceneUtils.js",
+			"position.set"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"replace",
+			"win"
+		],
+		"reverse": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 34.0
+	},
+	"input":
+	{
+		"height": 30.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.git":
+	{
+		"height": 71.0
+	},
+	"replace":
+	{
+		"height": 64.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"myv",
+				"html/js/myViewer.js"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 229.0,
+	"status_bar_visible": true
+}

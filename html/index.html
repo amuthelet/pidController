@@ -10,9 +10,75 @@
   		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 
   		<script>
+  /*
+   * hoverIntent | Copyright 2011 Brian Cherne
+   * http://cherne.net/brian/resources/jquery.hoverIntent.html
+   * modified by the jQuery UI team
+   */
+  $.event.special.hoverintent = {
+    setup: function() {
+      $( this ).bind( "mouseover", jQuery.event.special.hoverintent.handler );
+    },
+    teardown: function() {
+      $( this ).unbind( "mouseover", jQuery.event.special.hoverintent.handler );
+    },
+    handler: function( event ) {
+      var currentX, currentY, timeout,
+        args = arguments,
+        target = $( event.target ),
+        previousX = event.pageX,
+        previousY = event.pageY;
+ 
+      function track( event ) {
+        currentX = event.pageX;
+        currentY = event.pageY;
+      };
+ 
+      function clear() {
+        target
+          .unbind( "mousemove", track )
+          .unbind( "mouseout", clear );
+        clearTimeout( timeout );
+      }
+ 
+      function handler() {
+        var prop,
+          orig = event;
+ 
+        if ( ( Math.abs( previousX - currentX ) +
+            Math.abs( previousY - currentY ) ) < 7 ) {
+          clear();
+ 
+          event = $.Event( "hoverintent" );
+          for ( prop in orig ) {
+            if ( !( prop in event ) ) {
+              event[ prop ] = orig[ prop ];
+            }
+          }
+          // Prevent accessing the original event since the new event
+          // is fired asynchronously and the old event is no longer
+          // usable (#6028)
+          delete event.originalEvent;
+ 
+          target.trigger( event );
+        } else {
+          previousX = currentX;
+          previousY = currentY;
+          timeout = setTimeout( handler, 50 );
+        }
+      }
+ 
+      timeout = setTimeout( handler, 50 );
+      target.bind({
+        mousemove: track,
+        mouseout: clear
+      });
+    }
+  };
+
   			$(function() {
           var manualFPS = false;
-          $("#accordion").accordion({ heightStyle: "content", collapsible: true });
+          $("#accordion").accordion({ heightStyle: "content", collapsible: true, header:"h3" });
 
     			$( "#ui-sliderRoll" ).slider({min:-1.0, max:1.0, step:0.001, value:0.0, slide: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRoll").html(ui.value); return;}});
     			$( "#ui-sliderTilt" ).slider({min:-6, max:6, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtTilt").html(ui.value); return;}});
@@ -24,11 +90,14 @@
           $( "#ui-sliderNoise" ).slider({min:-1, max:1, step:0.01, value:0.0, slide: function(event, ui){$("#ui-txtNoise").html(ui.value); return;}, create: function(event, ui){$("#ui-txtNoise").html("0.005"); return;}});
           $( "#ui-sliderSpeed" ).slider({min:-1.0, max:1.0, step:0.05, value:0.0, slide: function(event, ui){$("#ui-txtSpeed").html(ui.value); return;}, create: function(event, ui){$("#ui-txtSpeed").html("0.0"); return;}});
           $( "#ui-sliderFrameRate" ).slider({min:10, max:60, step:1.0, value:25.0, slide: function(event, ui){$("#ui-txtFrameRate").html(ui.value); manualFPS = true; return;}, create: function(event, ui){$("#ui-txtFrameRate").html("25.0"); return;}});
-          $( "#ui-sliderRateRoll" ).slider({min:0.5, max:2.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateRoll").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRateRoll").html("1.0"); return;}});
-          $( "#ui-sliderRateTilt" ).slider({min:0.5, max:2.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateTilt").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRateTilt").html("1.0"); return;}});
-          $( "#ui-sliderRateYaw" ).slider({min:0.5, max:2.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateYaw").html(ui.value); return;}, create: function(event, ui){$("#ui-txtRateYaw").html("1.0"); return;}});
+          $( "#ui-sliderRateRoll" ).slider({min:0.1, max:4.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateRoll").html(ui.value); radioRollRate = ui.value; return;}, create: function(event, ui){$("#ui-txtRateRoll").html("1.0"); return;}});
+          $( "#ui-sliderRateTilt" ).slider({min:0.1, max:4.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateTilt").html(ui.value); radioTiltRate = ui.value; return;}, create: function(event, ui){$("#ui-txtRateTilt").html("1.0"); return;}});
+          $( "#ui-sliderRateYaw" ).slider({min:0.1, max:4.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateYaw").html(ui.value); radioYawRate = ui.value; return;}, create: function(event, ui){$("#ui-txtRateYaw").html("1.0"); return;}});
 
-          $( "#radio" ).buttonset();
+          $( "#ui-radioControlMode" ).buttonset();
+          $('#ui-radioControlMode input[type=radio]').change(function() {
+            controlMode = this.value;
+          });  
 
           $(document).keypress(function(event) {
             if (event.which == 113) {
@@ -75,8 +144,6 @@
           GetVirtualJoystickValue()
         }, 50);
 
-
-
         });
 
       requestAnimationFrame( animate );
@@ -97,9 +164,9 @@
         font-size:100%;
       }
 
-      h4 {
+      h3 {
         color: #fff;
-        font-size:10%;
+        font-size:20%;
         padding-top:0px;
         padding-bottom:0px;
         margin-top: 0px;
@@ -161,7 +228,7 @@
       #virtual_joystick {
         width   : 100%;
         height    : 100%;
-        z-index:20px;
+        z-index:3;
         position : absolute;
       }
 
@@ -175,84 +242,101 @@
     </div>
 
 		<div id="webgl">
-    <div id="virtual_joystick">
-    </div>
+        <div id="virtual_joystick">
+        </div>
   			<div id="ui">
           <div id="accordion">
 
            <h3>Description</h3>
             <div id="info">
-                  Implémentation simple d'un simulateur 3D interactif de Quadcopter, basé sur technologies web.</br>
-                  </br>
-                  PRE-REQUIS:</br>
-                  - Affichage utilisant le WebGl, nécessite un navigateur web récent (Chrome préféré)</br>
-                  - OS: PC, Mac, Linux </br>
-                  - Safari nécessite l'activation explicite du WebGl (option dans le menu Developpeur).
-                  </br>        
-                </br>
-                  Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info" target="MK-FR">mk-fr</a> !!</br>
+                  <p>
+                    Implémentation simple d'un simulateur 3D interactif de Quadcopter, basé sur technologies web.
+                  </p>
+                  <p>
+                    PRE-REQUIS:</br>
+                    - Affichage utilisant le WebGl, nécessite un navigateur web récent (Chrome préféré)</br>
+                    - OS: PC, Mac, Linux </br>
+                    - Safari nécessite l'activation explicite du WebGl (option dans le menu Developpeur).
+                  </p>
+                  <p>
+                    Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info" target="MK-FR">mk-fr</a> !!
+                  </p>
           
             </div>
 
 
            <h3>Paramètres de Pilotage</h3>
             <div id="info">
-            Sensibilité commandes</br>
-            _________________________</br></br>
-             <TABLE BORDER="0"> 
-                <CAPTION></CAPTION> 
-                <TR> 
-                  <TH>  
-                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Roll</div>
-                 </TH> 
-                 <TH>           
-                  <div id="ui-sliderRateRoll" class="slider"></div>
-                 </TH> 
-                 <TH>           
-                  <div id="ui-txtRateRoll" class="text"></div>
-                 </TH> 
-                </TR> 
+              <p>           
+              <b>Mode</b></br>
+              _________________________</br>
+              <div id="ui-radioControlMode">
+                  <input type="radio" id="ui-radioControlModeKeyboard" name="radio" checked="checked" value="0"><label for="ui-radioControlModeKeyboard">Clavier</br>Souris</label>
+                  <input type="radio" id="ui-radioControlModeTablet" name="radio" value="1"><label for="ui-radioControlModeTablet">Tablet</br>Déportée</label>
+                </div>           
+              </p>
+              <p>
+              <b>Sensibilité</b></br>
+              _________________________</br>
+               <TABLE BORDER="0"> 
+                  <CAPTION></CAPTION> 
+                  <TR> 
+                    <TH>  
+                    <div class="ui-state-default ui-corner-all ui-helper-clearfix">Roll</div>
+                   </TH> 
+                   <TH>           
+                    <div id="ui-sliderRateRoll" class="slider"></div>
+                   </TH> 
+                   <TH>           
+                    <div id="ui-txtRateRoll" class="text"></div>
+                   </TH> 
+                  </TR> 
 
-               <TR> 
-                  <TH>  
-                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Tilt</div>
-                 </TH> 
-                 <TH>           
-                  <div id="ui-sliderRateTilt" class="slider"></div>
-                 </TH> 
-                 <TH>           
-                  <div id="ui-txtRateTilt" class="text"></div>
-                 </TH> 
-                </TR> 
+                 <TR> 
+                    <TH>  
+                    <div class="ui-state-default ui-corner-all ui-helper-clearfix">Tilt</div>
+                   </TH> 
+                   <TH>           
+                    <div id="ui-sliderRateTilt" class="slider"></div>
+                   </TH> 
+                   <TH>           
+                    <div id="ui-txtRateTilt" class="text"></div>
+                   </TH> 
+                  </TR> 
 
-               <TR> 
-                  <TH>  
-                  <div class="ui-state-default ui-corner-all ui-helper-clearfix">Yaw</div>
-                 </TH> 
-                 <TH>           
-                  <div id="ui-sliderRateYaw" class="slider"></div>
-                 </TH> 
-                 <TH>           
-                  <div id="ui-txtRateYaw" class="text"></div>
-                 </TH> 
-                </TR> 
+                 <TR> 
+                    <TH>  
+                    <div class="ui-state-default ui-corner-all ui-helper-clearfix">Yaw</div>
+                   </TH> 
+                   <TH>           
+                    <div id="ui-sliderRateYaw" class="slider"></div>
+                   </TH> 
+                   <TH>           
+                    <div id="ui-txtRateYaw" class="text"></div>
+                   </TH> 
+                  </TR> 
 
-              </TABLE></br>
+                </TABLE>
+              </p>
 
-
-            Contrôle clavier / souris</br>
+          <p>
+            <b>Contrôle clavier / souris</b></br>
             _________________________</br></br>
                   - Gas: clic gauche souris au centre de l'écran + glissé vertical</br>
                   - Roulis: clic gauche souris au centre de l'écran + glissé horizontal</br>
                   - Tangage: Touches clavier Z,S</br>
-                  - Lacet: Touches clavier Q,D</br></br>
-            Contrôle tablet multi-touch</br>  
+                  - Lacet: Touches clavier Q,D
+          </p>
+
+          <p>
+            <b>Contrôle déporté</b></br>  
             _________________________</br></br>
 
             Necessite le lancement d'un server web local qui gère la comm entre la tablet et le simu. Installer <a href="http://nodejs.org" target="nodejs">nodejs</a>, dezipper <a href="http://amuthelet.free.fr/.pidController/archive.zip" target="Simu Archive">monSimuWeb</a>, taper 'node nodeHTTPServer.js' en ligne de commande dans le repertoire dézippé. Fermer la fenêtre acguel et relancer le simu en local dans un browser sur votre machine (IPaddress:3000/index.html), et l'interface de contrôle sur votre tablet (IPaddress:3000/index_vj.html).
+          </p>
             </div>
 
-            <h4>Paramètres Controlleurs PID</h4>
+            <h3>Paramètres Controlleurs PID</h3>
             <div>
               <p>
                 Paramètres communs aux controlleurs Roulis, Tanguage et Lacet.
@@ -415,7 +499,7 @@
 		<script src="js/postprocessing/ShaderPass.js"></script>
 		<script src="js/postprocessing/MaskPass.js"></script>
 
-    <script src="js/VirtualJoystick.js"></script>
+    <script src="js/virtualjoystick.js"></script>
 		<script src="js/Detector.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
