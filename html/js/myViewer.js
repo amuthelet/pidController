@@ -43,7 +43,9 @@ var dae, skin;
 var loader = new THREE.ColladaLoader();
 
 var controlerRoll, controlerTilt, controlerYaw;
+var controlerGimbalRoll, controlerGimbalTilt, controlerGimbalYaw;
 var currentRoll=0.0, currentTilt=0.0, currentYaw=0.0;
+var currentGimbalRoll=0.0, currentGimbalTilt=0.0;
 var tiltLimit=false, rollLimit=false;
 
 var weightForce;
@@ -57,6 +59,7 @@ var motorForce = new THREE.Vector3(0,1.0,0);
 var motorForceRep = new THREE.Vector3(0,0,0);
 
 var radioRoll=0.0, radioTilt=0.0, radioYaw=0.0, radioThrottle=0.0;
+var radioGimbalRoll=0.0, radioGimbalTilt=0.0, radioGimbalYaw=0.0;
 var radioRollRate=1.0, radioTiltRate=1.0, radioYawRate=1.0, radioThrottleRate=1.0;
 
 var radioYawTouched = false;
@@ -72,6 +75,7 @@ var isDecreasingYaw = false;
 var perSecond = 0.001;
 
 var root;
+var gimbal, gimbalTilt;
 var targetQuat = new THREE.Quaternion();
 
 var pointLight01, pointLight02, pointLight03;
@@ -187,6 +191,14 @@ function processModel(scene)
 			child.castShadow = false;
 			child.receiveShadow = false;    					
 		}
+		if( child.name == "Cylinder002")
+		{
+			gimbal = child;
+		}
+		if( child.name == "Cylinder005")
+		{
+			gimbalTilt = child;
+		}
 	});
 
 }
@@ -196,6 +208,10 @@ function init_pid()
 	controlerRoll = new PIDController(0.2, 0.01, 1.0);
 	controlerTilt = new PIDController(0.2, 0.01, 1.0);
 	controlerYaw = new PIDController(0.2, 0.01, 1.0);
+	controlerGimbalRoll = new PIDController(0.2, 0.01, 1.0);
+	controlerGimbalTilt = new PIDController(0.2, 0.01, 1.0);
+	controlerGimbalYaw = new PIDController(0.2, 0.01, 1.0);
+
 	return;
 }
 
@@ -446,8 +462,12 @@ function render() {
 	var root_axisX = new THREE.Vector3( 1, 0, 0);
 	var quaternionX = new THREE.Quaternion();
 	quaternionX.setFromAxisAngle( root_axisX, rotationAngleTilt );
-	root.quaternion.multiply(quaternionX);
 	currentTilt += rotationAngleTilt;
+
+	var gimbal_axisTilt = new THREE.Vector3(0,1,0);
+	var quaternionGimbalTilt = new THREE.Quaternion();
+	quaternionGimbalTilt.setFromAxisAngle(gimbal_axisTilt, rotationAngleTilt);
+	gimbalTilt.quaternion.multiply(quaternionGimbalTilt);
 
 	// Yaw
 	controlerYaw.Execute(currentYaw, radioYaw, perSecond);
@@ -455,7 +475,6 @@ function render() {
 	var root_axisY = new THREE.Vector3( 0, 1, 0);
 	var quaternionY = new THREE.Quaternion();
 	quaternionY.setFromAxisAngle( root_axisY, rotationAngleYaw );
-	root.quaternion.multiply(quaternionY);
 	currentYaw += rotationAngleYaw;
 
 	// Roll
@@ -464,13 +483,28 @@ function render() {
 		radioRoll = joystick.deltaX()*joystick.diffX*radioRollRate;
 	
 	controlerRoll.Execute(currentRoll, radioRoll, perSecond);
+	console.log(currentRoll);
 	var rotationAngleRoll = (controlerRoll.outputCommand * 0.02 * perSecond) + wind + noise;
 
 	var root_axisZ = new THREE.Vector3( 0, 0, 1);
 	var quaternionZ = new THREE.Quaternion();
 	quaternionZ.setFromAxisAngle( root_axisZ, rotationAngleRoll );
-	root.quaternion.multiply(quaternionZ);
 	currentRoll += rotationAngleRoll;
+
+	controlerGimbalRoll.Execute(currentGimbalRoll, -currentRoll, perSecond);	
+	var rotationAngleGimbalRoll = (controlerGimbalRoll.outputCommand * 0.02 * perSecond) + wind + noise;
+
+	var gimbal_axisZ = new THREE.Vector3(0,1,0);
+	var quaternionGimbalZ = new THREE.Quaternion();
+	quaternionGimbalZ.setFromAxisAngle(gimbal_axisZ, rotationAngleGimbalRoll);
+	gimbal.quaternion.multiply(quaternionGimbalZ);
+	currentGimbalRoll += rotationAngleGimbalRoll;
+
+	var newQuat = quaternionZ.normalize().clone();
+	newQuat.multiply(quaternionX.normalize());
+	newQuat.multiply(quaternionY.normalize());
+	newQuat.normalize();
+	root.quaternion.multiply(newQuat);
 
 	/////////////// Position ////////////
 	var currentPosition = root.position.clone();
