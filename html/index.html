@@ -94,6 +94,23 @@
           $( "#ui-sliderRateTilt" ).slider({min:0.1, max:4.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateTilt").html(ui.value); radioTiltRate = ui.value; return;}, create: function(event, ui){$("#ui-txtRateTilt").html("1.0"); return;}});
           $( "#ui-sliderRateYaw" ).slider({min:0.1, max:4.0, step:0.1, value:1.0, slide: function(event, ui){$("#ui-txtRateYaw").html(ui.value); radioYawRate = ui.value; return;}, create: function(event, ui){$("#ui-txtRateYaw").html("1.0"); return;}});
 
+          $( ".button" )
+            .button()
+            .click(function( event ) {
+              event.preventDefault();
+              createGoogleStreetMapEnv(scene, 500.0, new THREE.Vector3(0.0, 60.0, 0.0), $("#Latitude").val(), $("#Longitude").val());
+            });
+
+          $(".gllpSearchField").click( function(){
+            $(this).focus();
+          });
+          $("#Latitude").click( function(){
+            $(this).focus();
+          });
+          $("#Longitude").click( function(){
+            $(this).focus();
+          });
+
           $( "#ui-radioControlMode" ).buttonset();
           $('#ui-radioControlMode input[type=radio]').change(function() {
             controlMode = this.value;
@@ -101,19 +118,19 @@
 
           $(document).keypress(function(event) {
             if (event.which == 113) {
-               event.preventDefault();
+//               event.preventDefault();
                increaseYaw(); 
              }
             if (event.which == 100) {
-               event.preventDefault();
+  //             event.preventDefault();
                decreaseYaw();
              }
             if (event.which == 122) {
-               event.preventDefault();
+    //           event.preventDefault();
                increaseTilt();
              }
             if (event.which == 115) {
-               event.preventDefault();
+      //         event.preventDefault();
                decreaseTilt();
              }
 
@@ -175,7 +192,7 @@
       }
 
       #accordion {
-        width: 220px;
+        width: 230px;
         height:25%;
         position:absolute;
         z-index:10;
@@ -249,20 +266,20 @@
 
            <h3>Description</h3>
             <div id="info">
-                  <p>
-                    Implémentation simple d'un simulateur 3D interactif de Quadcopter, basé sur technologies web.
-                  </p>
-                  <p>
-                    PRE-REQUIS:</br>
-                    - Affichage utilisant le WebGl, nécessite un navigateur web récent (Chrome préféré)</br>
-                    - OS: PC, Mac, Linux </br>
-                    - Safari nécessite l'activation explicite du WebGl (option dans le menu Developpeur).
-                  </p>
-                  <p>
-                    Intéressé par les multicopters ? Visitez le forum <a href="http://mk-fr.info" target="MK-FR">mk-fr</a> !!
-                  </p>
-          
+                    Simulateur web 3D interactif de Quadcopter.</br>
+                    Intéressé par les multicopters ? Rejoignez  <a href="http://mk-fr.info" target="MK-FR">mk-fr</a> !!
             </div>
+
+           <h3>Pre-requis techniques</h3>
+            <div id="info">
+                  <p>
+                    - OS: Windows, Linux, MacOS.</br>
+                    - Utilise WebGl, nécessite un navigateur web récent (Chrome préféré)</br>
+                    - Safari nécessite l'activation explicite du WebGl (Menu Developpeur).</br>
+                    - Ne marche pas sur tablettes iOS (et probablement pas sur Android).</br>
+                  </p>
+            </div>
+
 
 
            <h3>Paramètres de Pilotage</h3>
@@ -427,13 +444,6 @@
               </TABLE>
             </div>
 
-            <h3>Geolocalisation</h3>
-            <div>
-              <p>
-              </p>
-           </div>
-
-
             <h3>Paramètres "Système"</h3>
             <div>
               <p>
@@ -467,6 +477,22 @@
  
               </p>
            </div>
+    
+          <fieldset class="gllpLatlonPicker">
+            Géolocalisation
+            <p>
+            <input type="text" class="gllpSearchField">
+            <input type="button" class="gllpSearchButton" value="search">
+            </p>
+            <div class="gllpMap">Google Maps</div>
+            Latitude:  <input type="visible" id="Latitude" class="gllpLatitude" value="47.47366455121616" width="20px"/>
+            Longitude<input type="visible" id="Longitude" class="gllpLongitude" value="-3.0971313267946243"/>
+            <input type="hidden" class="gllpZoom" value="3"/>
+            <p>
+              <input type="Load Environment" class="button" id="LoadEnv" value="Charger ce lieu">
+            </p>
+          </fieldset>
+
       </div>
     </div>
     </div>
@@ -489,7 +515,6 @@
 		<script src="js/shaders/BrightnessContrastShader.js"></script>
 		<script src="js/shaders/HueSaturationShader.js"></script>
 
-
 		<script src="js/postprocessing/EffectComposer.js"></script>
 		<script src="js/postprocessing/RenderPass.js"></script>
 		<script src="js/postprocessing/BloomPass.js"></script>
@@ -499,10 +524,19 @@
 		<script src="js/postprocessing/ShaderPass.js"></script>
 		<script src="js/postprocessing/MaskPass.js"></script>
 
+    <script src="js/GSVPano.min.js"></script>
+    <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+    <link rel="stylesheet" type="text/css" href="css/jquery-gmaps-latlon-picker.css"/>
+    <script src="js/jquery-gmaps-latlon-picker.js"></script>
+
     <script src="js/virtualjoystick.js"></script>
 		<script src="js/Detector.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
+
+    <script src="js/ThreeQuatExt.js"></script>
+    <script src="js/ThreeMatrix4Ext.js"></script>
 
 		<script src="js/PIDController.js"></script>
 		<script src="js/myViewer.js"></script>

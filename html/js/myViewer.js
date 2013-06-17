@@ -43,10 +43,13 @@ var dae, skin;
 var loader = new THREE.ColladaLoader();
 
 var controlerRoll, controlerTilt, controlerYaw;
+var controllerVectorRoll, controllerVectorYaw, controllerVectorTilt;
 var controlerGimbalRoll, controlerGimbalTilt, controlerGimbalYaw;
 var currentRoll=0.0, currentTilt=0.0, currentYaw=0.0;
 var currentGimbalRoll=0.0, currentGimbalTilt=0.0;
 var tiltLimit=false, rollLimit=false;
+
+var googleEnv;
 
 var weightForce;
 var motorForce;
@@ -203,6 +206,8 @@ function processModel(scene)
 
 }
 
+
+
 function init_pid()
 {
 	controlerRoll = new PIDController(0.2, 0.01, 1.0);
@@ -212,8 +217,12 @@ function init_pid()
 	controlerGimbalTilt = new PIDController(0.2, 0.01, 1.0);
 	controlerGimbalYaw = new PIDController(0.2, 0.01, 1.0);
 
+	controllerVectorRoll = new PIDVectorController(0.2, 0.01, 1.0);
+	controllerVectorYaw = new PIDVectorController(0.2, 0.01, 1.0);
+	controllerVectorTilt = new PIDVectorController(0.2, 0.01, 1.0);
 	return;
 }
+
 
 function init() {
 
@@ -226,7 +235,7 @@ function init() {
 	scene = new THREE.Scene();
 
 	cameraLookAt = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
-	cameraLookAt.position.set( 9, 2, -9 );
+	cameraLookAt.position.set( 15, 8, -15 );
 
 	cameraOrbit = new THREE.PerspectiveCamera( 45, viewportWidth / viewportHeight, 1, 2000 );
 	cameraOrbit.position.set( 7, 2, 7 );
@@ -241,14 +250,19 @@ function init() {
 	scene.add(dummy);
 
 	createLights(scene);
+	var hl = new THREE.HemisphereLight(new THREE.Color("rgb(64,64,110)"), new THREE.Color("rgb(64,32,32)"), 1.0);
+	scene.add(hl);
+
 	root.add( dae );
 	processModel(scene);
 
 	//weightForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -1, 0 ), 0x000000 );
 	//motorForceRep = create_line( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), 0xffffff );
 
-	createSkyBox(scene, "textures/cube/Park2/", ".jpg", new THREE.Vector3(500.0,550.0,500.0));
-	
+
+	//createSkyBox(scene, "textures/cube/Park2/", ".jpg", new THREE.Vector3(500.0,550.0,500.0));
+	createGoogleStreetMapEnv(scene, 500.0, new THREE.Vector3(0.0, 60.0, 0.0), $("#Latitude").val(), $("#Longitude").val());
+
 	projector = new THREE.Projector();
 
 	renderer = new THREE.WebGLRenderer({
@@ -272,7 +286,8 @@ function init() {
 	// Ground
 	createPlane(scene, new THREE.Vector3(0,-3.0, 0), 
 		new THREE.Vector3(-1.57079633,0,0),
-		new THREE.Vector3(10000.0,10000.0,10000.0)
+		new THREE.Vector3(500.0,500.0,500.0),
+		0.4
 	);
 
 	controls = new THREE.OrbitControls( cameraOrbit );
@@ -295,7 +310,7 @@ function init() {
 	var effectCopy = new THREE.ShaderPass( shaderCopy );
 
 	var effectBloom = new THREE.BloomPass( 0.2 );
-	var effectFilmBW = new THREE.FilmPass( 0.25, 0.3, 1024, false );
+	var effectFilmBW = new THREE.FilmPass( 0.1, 0.1, 1024, false );
 
 	var effectHBlur = new THREE.ShaderPass( THREE.HorizontalBlurShader );
 	effectHBlur.uniforms[ 'h' ].value = 0.3 / ( width / 2 );
@@ -330,12 +345,12 @@ function init() {
 	effectFXAA.renderToScreen = true;
 
 	brightnessContrast = new THREE.ShaderPass(THREE.BrightnessContrastShader);
-	brightnessContrast.uniforms[ 'brightness' ].value = -0.15;
-	brightnessContrast.uniforms[ 'contrast' ].value = 0.6;
+	brightnessContrast.uniforms[ 'brightness' ].value = 0.0; //-0.15;
+	brightnessContrast.uniforms[ 'contrast' ].value = 0;
 
 	hueSaturation = new THREE.ShaderPass(THREE.HueSaturationShader);
 	hueSaturation.uniforms[ 'hue' ].value = 0.0;
-	hueSaturation.uniforms[ 'saturation' ].value = -0.65;
+	hueSaturation.uniforms[ 'saturation' ].value = -0.2; //-0.65;
 
 //	renderModel.clear = false;
 
@@ -453,43 +468,128 @@ function render() {
 	joystick.diffX = 0.006;
 	joystick.diffY = 0.004;
 
-	//////////// ROTATION ///////////////
-	// Tilt
-	var targetTilt = $( "#ui-sliderRoll" ).slider("option", "value");
-	controlerTilt.Execute(currentTilt, radioTilt, perSecond);
-	var rotationAngleTilt = controlerTilt.outputCommand * 0.02 * perSecond + noise ;
+	///////////////////////
 
-	var root_axisX = new THREE.Vector3( 1, 0, 0);
-	var quaternionX = new THREE.Quaternion();
-	quaternionX.setFromAxisAngle( root_axisX, rotationAngleTilt );
-	currentTilt += rotationAngleTilt;
-
-	var gimbal_axisTilt = new THREE.Vector3(0,1,0);
-	var quaternionGimbalTilt = new THREE.Quaternion();
-	quaternionGimbalTilt.setFromAxisAngle(gimbal_axisTilt, rotationAngleTilt);
-	gimbalTilt.quaternion.multiply(quaternionGimbalTilt);
+	var dir = new THREE.Vector3(), up = new THREE.Vector3(), right = new THREE.Vector3();
+	root.quaternion.getDirection(dir, up, right);
 
 	// Yaw
-	controlerYaw.Execute(currentYaw, radioYaw, perSecond);
-	var rotationAngleYaw = controlerYaw.outputCommand * 0.02 * perSecond + noise;
-	var root_axisY = new THREE.Vector3( 0, 1, 0);
-	var quaternionY = new THREE.Quaternion();
-	quaternionY.setFromAxisAngle( root_axisY, rotationAngleYaw );
-	currentYaw += rotationAngleYaw;
+	var rotationYawQuat = new THREE.Quaternion();
+	rotationYawQuat.setFromAxisAngle(up, radioYaw);
+
+	var dirTarget = dir.clone();
+	dirTarget.applyQuaternion( rotationYawQuat );
+
+	controllerVectorYaw.Execute(dir, dirTarget, perSecond);
+
+	var newDir = dir.clone().sub(controllerVectorYaw.outputCommand.clone().multiplyScalar( 0.02 * perSecond));
+	newDir.normalize();
+
 
 	// Roll
 	var targetRoll = $( "#ui-sliderRoll" ).slider("option", "value");
 	if( controlMode == 0)
 		radioRoll = joystick.deltaX()*joystick.diffX*radioRollRate;
 	
+	var rotationRollQuat = new THREE.Quaternion();
+	rotationRollQuat.setFromAxisAngle(dir, radioRoll);
+
+	var rightTarget = right.clone();
+	rightTarget.applyQuaternion( rotationRollQuat );
+
+	controllerVectorRoll.Execute(right, rightTarget, perSecond);
+
+	var newRight = right.clone().sub(controllerVectorRoll.outputCommand.clone().multiplyScalar( 0.02 * perSecond));
+	newRight.normalize();
+
+	// Tilt
+	var targetTilt = $( "#ui-sliderRoll" ).slider("option", "value");
+	
+	var rotationTiltQuat = new THREE.Quaternion();
+	rotationTiltQuat.setFromAxisAngle(right, radioTilt);
+
+	var upTarget = up.clone();
+	upTarget.applyQuaternion( rotationTiltQuat );
+
+	controllerVectorTilt.Execute(up, upTarget, perSecond);
+
+	var newUp = up.clone().sub(controllerVectorTilt.outputCommand.clone().multiplyScalar( 0.02 * perSecond));
+	newUp.normalize();
+
+	///////////////////////////////////
+//	root.quaternion.setFromDirection(newDir, newUp, newRight);	
+	///////////////////////////////////
+	
+	
+	//////////// ROTATION ///////////////
+
+	// Yaw
+
+/*	var yawRef = new THREE.Vector3(1, 0, 0);
+	if( right.z > 0.0 )
+		currentYaw = -yawRef.angleTo(right);
+	else
+		currentYaw = yawRef.angleTo(right);
+*/
+	controlerYaw.Execute(currentYaw, radioYaw, perSecond);
+	var rotationAngleYaw = controlerYaw.outputCommand * 0.02 * perSecond + noise;
+	var root_axisY = new THREE.Vector3( 0, 1, 0);
+	var root_axisYWorld = root_axisY.clone();
+	root.worldToLocal( root_axisYWorld );
+	root_axisYWorld.normalize();
+
+	var quaternionY = new THREE.Quaternion();
+	quaternionY.setFromAxisAngle( root_axisY, currentYaw+rotationAngleYaw );
+
+	currentYaw += rotationAngleYaw;
+
+	// Tilt
+	var targetTilt = $( "#ui-sliderRoll" ).slider("option", "value");
+
+	var tiltRef = new THREE.Vector3(0, 0, 1);
+	tiltRef.applyAxisAngle(root_axisY, currentYaw);
+	if( dir.y > 0.0 )
+		currentTilt = -tiltRef.angleTo(dir);
+	else
+		currentTilt = tiltRef.angleTo(dir);
+
+	controlerTilt.Execute(currentTilt, radioTilt, perSecond);
+	var rotationAngleTilt = controlerTilt.outputCommand * 0.02 * perSecond + noise ;
+
+	var root_axisX = new THREE.Vector3( 1, 0, 0);
+	var quaternionX = new THREE.Quaternion();
+	quaternionX.setFromAxisAngle( root_axisX, currentTilt+rotationAngleTilt );
+
+	controlerGimbalTilt.Execute(currentGimbalTilt, currentTilt, perSecond);
+	var rotationAngleGimbalTilt = (controlerGimbalTilt.outputCommand * 0.02 * perSecond) + noise;
+
+	var gimbal_axisTilt = new THREE.Vector3(0,1,0);
+	var quaternionGimbalTilt = new THREE.Quaternion();
+	quaternionGimbalTilt.setFromAxisAngle(gimbal_axisTilt, rotationAngleGimbalTilt);
+	gimbalTilt.quaternion.multiply(quaternionGimbalTilt);
+	currentGimbalTilt += rotationAngleGimbalTilt;
+
+	// Roll
+	var targetRoll = $( "#ui-sliderRoll" ).slider("option", "value");
+	if( controlMode == 0)
+		radioRoll = joystick.deltaX()*joystick.diffX*radioRollRate;
+	
+	var rollRef = new THREE.Vector3(1, 0, 0);
+//	rollRef.applyAxisAngle(root_axisY, currentYaw);
+	var quaternionYCum = new THREE.Quaternion();
+	quaternionYCum.setFromAxisAngle( root_axisY, currentYaw );
+	rollRef.applyQuaternion(quaternionYCum);
+	if( right.y > 0.0)
+		currentRoll = rollRef.angleTo(right);
+	else
+		currentRoll = -rollRef.angleTo(right);
+
 	controlerRoll.Execute(currentRoll, radioRoll, perSecond);
-	console.log(currentRoll);
 	var rotationAngleRoll = (controlerRoll.outputCommand * 0.02 * perSecond) + wind + noise;
 
 	var root_axisZ = new THREE.Vector3( 0, 0, 1);
 	var quaternionZ = new THREE.Quaternion();
-	quaternionZ.setFromAxisAngle( root_axisZ, rotationAngleRoll );
-	currentRoll += rotationAngleRoll;
+	quaternionZ.setFromAxisAngle( root_axisZ, currentRoll+rotationAngleRoll );
 
 	controlerGimbalRoll.Execute(currentGimbalRoll, -currentRoll, perSecond);	
 	var rotationAngleGimbalRoll = (controlerGimbalRoll.outputCommand * 0.02 * perSecond) + wind + noise;
@@ -500,11 +600,13 @@ function render() {
 	gimbal.quaternion.multiply(quaternionGimbalZ);
 	currentGimbalRoll += rotationAngleGimbalRoll;
 
-	var newQuat = quaternionZ.normalize().clone();
+	var newQuat = quaternionY.normalize().clone();
+	newQuat.multiply(quaternionZ.normalize());
 	newQuat.multiply(quaternionX.normalize());
-	newQuat.multiply(quaternionY.normalize());
 	newQuat.normalize();
-	root.quaternion.multiply(newQuat);
+
+	root.quaternion = newQuat;
+//	root.quaternion.multiply(newQuat);
 
 	/////////////// Position ////////////
 	var currentPosition = root.position.clone();
@@ -537,7 +639,7 @@ function render() {
 	if( newPosition.y < -1.0)
 		newPosition.y = -1.0;
 	
-	root.position = newPosition;
+	root.position = newPosition; //.add(new THREE.Vector3(0.0, 0, 0.01));
 
 	cameraLookAt.lookAt(newPosition);
 	pointLight01.position = newPosition.clone().add(new THREE.Vector3(-6,6,-2));
@@ -616,8 +718,8 @@ function createLights(scene)
 	var fov = 70;
 	// Lights
 	// orange
-	var color1 = new THREE.Color(0xca5825);
-	pointLight01 = new THREE.SpotLight(color1.getHex(), 0.8);
+	var color1 = new THREE.Color("rgb(128,128,128)");
+	pointLight01 = new THREE.SpotLight(color1.getHex(), 1.0);
 	var pos1 = new THREE.Vector3(-5.0, 5.0, -2.0);
 	pointLight01.position.set(pos1.x, pos1.y, pos1.z);
 	pointLight01.target.position.set(0,0,0);
@@ -635,7 +737,7 @@ function createLights(scene)
 //	scene.add( pointLight01Mesh );
 
 	// blue
-	var color2 = new THREE.Color(0x9cb3c8);
+	var color2 = new THREE.Color("rgb(128,128,128)");
 	pointLight02 = new THREE.SpotLight(color2.getHex(), 1.0);
 	var pos2 = new THREE.Vector3(5.0,1.0,-2.0);
 	pointLight02.position.set(pos2.x, pos2.y, pos2.z);
@@ -655,8 +757,8 @@ function createLights(scene)
 //	scene.add( pointLight02Mesh );
 
 	// white
-	var color3 = new THREE.Color(0xadabab);
-	pointLight03 = new THREE.SpotLight(color3.getHex(), 0.7);
+	var color3 = new THREE.Color("rgb(128,128,128)");
+	pointLight03 = new THREE.SpotLight(color3.getHex(), 1.0);
 	var pos3 = new THREE.Vector3(0.0,2.0,5.0);
 	pointLight03.position.set(pos3.x, pos3.y, pos3.z);
 	pointLight03.target.position.set(0,0,0);
@@ -678,7 +780,7 @@ function createLights(scene)
 //	createFlare(scene, pointLight02.position, pointLight02.color);
 //	createFlare(scene, pointLight03.position, pointLight03.color);
 
-	scene.add( new THREE.AmbientLight( 0x727272 ) );
+	scene.add( new THREE.AmbientLight( "rgb(100,100,100)" ) );
 }
 
 function log(msg) {
@@ -733,18 +835,18 @@ function createTexturedPlane(scene, position, rotation, scale, texture)
 
 }
 
-function createPlane(scene, position, rotation, scale)
+function createPlane(scene, position, rotation, scale, opacity)
 {	
 	log("Creating new plane ...");
 
 	var materialPlane	= new THREE.MeshPhongMaterial({
 	ambient		: 0xffffff,
-	color		: 0xffffff,
+	color		: 0x000000,
 	shininess	: 10, 
-	specular	: 0xffffff,
+	specular	: 0x000000,
 	shading		: THREE.SmoothShading,
 	transparent     : true,
-	opacity          : 0.65,
+	opacity          : opacity,
 	});		
 
 	var geometry = new THREE.PlaneGeometry(1, 1);
@@ -760,9 +862,32 @@ function createPlane(scene, position, rotation, scale)
 
 }
 
-function createSkyBox(scene, path, format, position)
+function createGoogleStreetMapEnv(scene, size, pos, latitude, longitude)
+{
+	if( googleEnv === undefined)
+		googleEnv = new THREE.Mesh( new THREE.SphereGeometry( size, 60, 40 ), new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/cube/park2/nx.jpg' ) ,depthWrite:false, side: THREE.BackSide } ) );
+	
+	// Implement the onPanoramaLoad handler
+	loader = new GSVPANO.PanoLoader( {
+			zoom: 3
+		} );	// Invoke the load method with a LatLng point
+	loader.onPanoramaLoad = function() {
+		googleEnv.material.map = new THREE.Texture( this.canvas ); 
+		googleEnv.material.map.needsUpdate = true;
+		console.log("GSVPano loaded");
+	};
+
+	loader.load( new google.maps.LatLng( latitude, longitude ) );
+	googleEnv.doubleSided = true;
+	googleEnv.position = pos;
+	scene.add( googleEnv );
+
+}
+
+function createSkyBox(scene, path, format, size)
 {
 	log("Creating new skyBox");
+
 	var urls = [
 		path + 'px' + format, path + 'nx' + format,
 		path + 'py' + format, path + 'ny' + format,
@@ -784,7 +909,7 @@ function createSkyBox(scene, path, format, position)
 
 	} );
 
-	mesh = new THREE.Mesh( new THREE.CubeGeometry( position.x, position.y, position.z), material );
+	mesh = new THREE.Mesh( new THREE.CubeGeometry( size.x, size.y, size.z), material );
 	//mesh.receiveShadow = true;
 	scene.add( mesh );
 
