@@ -97,9 +97,19 @@
           $( ".button" )
             .button()
             .click(function( event ) {
+              $(".gllpSearchField").blur();
+              $("#Longitude").blur();
+              $("#Latitude").blur();
               event.preventDefault();
               createGoogleStreetMapEnv(scene, 500.0, new THREE.Vector3(0.0, 60.0, 0.0), $("#Latitude").val(), $("#Longitude").val());
             });
+
+          $( ".gllpSearchButton").click(function( event ) {            
+              $(".gllpSearchField").blur();
+              $("#Longitude").blur();
+              $("#Latitude").blur();
+          });
+
 
           $(".gllpSearchField").click( function(){
             $(this).focus();
@@ -468,7 +478,7 @@
             <h3>Crédits</h3>
             <div>
               <p>
-                Utilise: <a href="http://threejs.org" target="Three.js">Three.js</a>, <a href="http://jqueryui.com" target="JQuery UI">jQuery UI</a>, <a href="http://smoothiecharts.org" target="Smoothie Charts"> Smoothie Charts</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js" target="VirtualJoystick.js">VirtualJoystick.js</a></br>
+                Utilise: <a href="http://threejs.org" target="Three.js">Three.js</a>, <a href="http://jqueryui.com" target="JQuery UI">jQuery UI</a>, <a href="http://smoothiecharts.org" target="Smoothie Charts"> Smoothie Charts</a>, <a href="https://github.com/jeromeetienne/virtualjoystick.js" target="VirtualJoystick.js">VirtualJoystick.js</a>,<a href="http://www.wimagguc.com/" target="JQuery Google Maps Picker"> JQuery Google Maps Picker by Richard Dancsi</a> </br>
                 </br>
                 Développé par:</br>
                 Arnaud Muthelet</br>
@@ -485,8 +495,8 @@
             <input type="button" class="gllpSearchButton" value="search">
             </p>
             <div class="gllpMap">Google Maps</div>
-            Latitude:  <input type="visible" id="Latitude" class="gllpLatitude" value="47.47366455121616" width="20px"/>
-            Longitude<input type="visible" id="Longitude" class="gllpLongitude" value="-3.0971313267946243"/>
+            Latitude:  <input type="visible" id="Latitude" class="gllpLatitude" value="48.38502848291077" width="20px"/>
+            Longitude<input type="visible" id="Longitude" class="gllpLongitude" value="-4.397844113409519"/>
             <input type="hidden" class="gllpZoom" value="3"/>
             <p>
               <input type="Load Environment" class="button" id="LoadEnv" value="Charger ce lieu">

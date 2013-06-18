@@ -143,7 +143,7 @@ function launchWebGL()
 	viewportHeight = height + 80.0 / 100.0;
 
 	loader.options.convertUpAxis = true;
-	loader.load( './models/collada/quadroXL/QuadXL-noCamera.DAE', function ( collada ) {
+	loader.load( './models/collada/quadroXL/QuadXL.DAE', function ( collada ) {
 
 		dae = collada.scene;
 		skin = collada.skins[ 0 ];
@@ -617,7 +617,7 @@ function render() {
 
 	// Weight
 	var weightForceDiff = weightForce.clone();
-	weightForceDiff.multiplyScalar( 0.02 );
+	weightForceDiff.multiplyScalar( 0.04 );
 	allForces.add( weightForceDiff );
 
 	// MotorForce
@@ -630,7 +630,7 @@ function render() {
 	if( radioThrottle < 0.0 )
 			radioThrottle = 0.0;
 
-	allForces.add( motorForce.multiplyScalar( radioThrottle ));
+	allForces.add( motorForce.multiplyScalar( radioThrottle * 1.5));
 
 	// Update pos
 	newPosition = currentPosition.clone();
